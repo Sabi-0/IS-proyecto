@@ -6,28 +6,16 @@ import { syncUser } from './services/api';
 
 function App() {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Nuevo estado para la carga inicial
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    // onAuthStateChanged nos dice si el usuario está logueado o no
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      
-      // --- 2. Lógica para sincronizar con el backend ---
-      if (currentUser) {
-        try {
-          // Obtenemos el token del usuario actual
-          const token = await currentUser.getIdToken();
-          // Enviamos el token a nuestro backend
-          await syncUser(token);
-        } catch (error) {
-          console.error("No se pudo obtener el token o sincronizar el usuario.", error);
-        }
-      }
-      // --------------------------------------------------
-
-      setLoading(false);
+      setLoading(false); // La comprobación inicial ha terminado
     });
 
+    // Limpiamos el listener cuando el componente se desmonta
     return () => unsubscribe();
   }, []);
 
@@ -39,6 +27,7 @@ function App() {
     }
   };
 
+  // Mientras se comprueba el estado de autenticación, no mostramos nada
   if (loading) {
     return <div>Cargando...</div>;
   }
@@ -46,6 +35,7 @@ function App() {
   return (
     <div className="App">
       {user ? (
+        // Si hay un usuario, muestra la bienvenida
         <div style={{ textAlign: 'center', marginTop: '50px' }}>
           <h1>¡Bienvenido!</h1>
           <p>Email: {user.email || 'Invitado'}</p>
@@ -55,6 +45,7 @@ function App() {
           </button>
         </div>
       ) : (
+        // Si no hay usuario, muestra la página de login
         <AuthPage />
       )}
     </div>

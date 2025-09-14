@@ -17,7 +17,6 @@ const SettingsIcon = () => (
 
 const HomePage = ({ user, handleLogout }) => {
   // Nota: por ahora los botones solo mostrarán un log en la consola.
-  // Más adelante, los conectarás a diferentes rutas de tu aplicación.
   const handleNavigation = (path) => {
     console.log(`Navegando a: ${path}`);
     //history.push(path) con React Router
@@ -49,19 +48,19 @@ const HomePage = ({ user, handleLogout }) => {
         <div className="dashboard-grid">
           <div className="card" onClick={() => handleNavigation('/classic')}>
             <h3>Modo Clásico</h3>
-            <p>Juega trivias por categorías y demuestra lo que sabes.</p>
+            <p>Trivias y categorías.</p>
           </div>
           <div className="card" onClick={() => handleNavigation('/tournament')}>
             <h3>Modo Torneo</h3>
-            <p>Compite contra otros en torneos y gana premios.</p>
+            <p>Torneos.</p>
           </div>
           <div className="card" onClick={() => handleNavigation('/learning')}>
             <h3>Aprendizaje</h3>
-            <p>Accede a cursos interactivos y expande tus conocimientos.</p>
+            <p>Accede a los cursos interactivos.</p>
           </div>
           <div className="card" onClick={() => handleNavigation('/leaderboards')}>
             <h3>Leaderboards</h3>
-            <p>Consulta tu ranking y el historial de tus partidas.</p>
+            <p>Ranking e historial.</p>
           </div>
         </div>
       </main>

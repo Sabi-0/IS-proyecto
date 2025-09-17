@@ -6,7 +6,6 @@ const TriviaGame = ({ questions, categoryName, onGameEnd }) => {
   const [score, setScore] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [isAnswered, setIsAnswered] = useState(false);
-
   const currentQuestion = questions[currentQuestionIndex];
 
   useEffect(() => {
@@ -14,7 +13,6 @@ const TriviaGame = ({ questions, categoryName, onGameEnd }) => {
     setIsAnswered(false);
   }, [currentQuestionIndex]);
 
-  // Función para decodificar caracteres HTML (ej: &quot; -> ")
   const decodeHTML = (html) => {
     const txt = document.createElement("textarea");
     txt.innerHTML = html;
@@ -39,13 +37,9 @@ const TriviaGame = ({ questions, categoryName, onGameEnd }) => {
     }
   };
 
-  if (!currentQuestion) {
-    return <div>Cargando pregunta...</div>;
-  }
+  if (!currentQuestion) return <div>Cargando pregunta...</div>;
 
-  // Juntamos y mezclamos las respuestas correctas e incorrectas
   const allOptions = [...currentQuestion.incorrect_answers, currentQuestion.correct_answer];
-  // Usamos un memoized shuffle para evitar que se re-ordenen en cada render
   const shuffledOptions = React.useMemo(() => allOptions.sort(() => Math.random() - 0.5), [currentQuestion]);
 
   return (

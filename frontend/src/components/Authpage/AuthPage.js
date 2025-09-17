@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { auth, googleProvider } from '../../firebaseConfig.js'; // Asegúrate que la ruta sea correcta
+import { auth, googleProvider } from '../../firebaseConfig.js'; 
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
   signInAnonymously
 } from "firebase/auth";
-import './AuthPage.css'; // Asumiendo que el CSS está en la misma carpeta
+import './AuthPage.css'; 
 
 const AuthPage = ({ onBack }) => {
   const [email, setEmail] = useState('');
@@ -34,7 +34,6 @@ const AuthPage = ({ onBack }) => {
     setMessage('');
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // No es necesario hacer nada más, el listener de App.js se encargará
     } catch (err) {
       setError(err.message);
     }
@@ -50,7 +49,6 @@ const AuthPage = ({ onBack }) => {
     }
   };
 
-  // **ESTA ES LA FUNCIÓN CLAVE PARA EL LOGIN DE INVITADO**
   const handleGuestSignIn = async () => {
     setError(null);
     setMessage('');

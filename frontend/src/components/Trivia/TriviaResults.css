@@ -1,0 +1,53 @@
+.results-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: #f5f7fa;
+  text-align: center;
+}
+
+.results-box {
+  background: #fff;
+  padding: 40px 60px;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.results-box h1 {
+  color: #1E88E5;
+}
+
+.score-text {
+  font-size: 1.5rem;
+  margin: 20px 0;
+}
+
+.score-text span {
+  font-weight: bold;
+  font-size: 2rem;
+  color: #4CAF50;
+}
+
+.percentage {
+    font-size: 4rem;
+    font-weight: bold;
+    color: #1E88E5;
+    margin: 20px 0 40px;
+}
+
+.play-again-button {
+  background-color: #1E88E5;
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 50px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.play-again-button:hover {
+  background-color: #1565C0;
+}

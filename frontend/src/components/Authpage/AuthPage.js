@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
-import { auth, googleProvider } from '../../firebaseConfig';
+import { auth, googleProvider } from '../../firebaseConfig.js'; // Asegúrate que la ruta sea correcta
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
   signInAnonymously
 } from "firebase/auth";
+import './AuthPage.css'; // Asumiendo que el CSS está en la misma carpeta
 
-import './AuthPage.css';
-
-const AuthPage = ({ onBack }) => { // <-- Recibe la función onBack
+const AuthPage = ({ onBack }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
@@ -25,7 +24,6 @@ const AuthPage = ({ onBack }) => { // <-- Recibe la función onBack
       setEmail('');
       setPassword('');
     } catch (err) {
-      console.error("Error al registrar:", err.message);
       setError(err.message);
     }
   };
@@ -36,9 +34,8 @@ const AuthPage = ({ onBack }) => { // <-- Recibe la función onBack
     setMessage('');
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      setMessage('¡Inicio de sesión exitoso!');
+      // No es necesario hacer nada más, el listener de App.js se encargará
     } catch (err) {
-      console.error("Error al iniciar sesión:", err.message);
       setError(err.message);
     }
   };
@@ -48,21 +45,18 @@ const AuthPage = ({ onBack }) => { // <-- Recibe la función onBack
     setMessage('');
     try {
       await signInWithPopup(auth, googleProvider);
-      setMessage('¡Inicio de sesión con Google exitoso!');
     } catch (err) {
-      console.error("Error al iniciar sesión con Google:", err.message);
       setError(err.message);
     }
   };
 
+  // **ESTA ES LA FUNCIÓN CLAVE PARA EL LOGIN DE INVITADO**
   const handleGuestSignIn = async () => {
     setError(null);
     setMessage('');
     try {
       await signInAnonymously(auth);
-      setMessage('¡Sesión como Invitado iniciada!');
     } catch (err) {
-      console.error("Error al iniciar sesión como invitado:", err.message);
       setError(err.message);
     }
   };
@@ -70,12 +64,10 @@ const AuthPage = ({ onBack }) => { // <-- Recibe la función onBack
   return (
     <div className="auth-container">
       <div className="auth-box">
-        {/* --- Botón para regresar --- */}
         <button onClick={onBack} className="back-button">← Regresar</button>
-        
         <h2>Ingreso al Sistema</h2>
 
-        {error && <p className="error-message">Error: {error}</p>}
+        {error && <p className="error-message">{error}</p>}
         {message && <p className="success-message">{message}</p>}
 
         <form onSubmit={handleEmailSignIn} className="email-auth-form">
@@ -111,10 +103,11 @@ const AuthPage = ({ onBack }) => { // <-- Recibe la función onBack
 
         <div className="social-auth-options">
           <button onClick={handleGoogleSignIn} className="google-btn">
-            Iniciar Sesión con Google <span></span>
+            Iniciar Sesión con Google
           </button>
+          {/* BOTÓN DE INVITADO */}
           <button onClick={handleGuestSignIn} className="guest-btn">
-            Entrar como Invitado <span> </span>
+            Entrar como Invitado
           </button>
         </div>
       </div>

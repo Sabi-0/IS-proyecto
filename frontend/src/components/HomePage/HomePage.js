@@ -1,65 +1,83 @@
-import React from 'react';
-import './HomePage.css'; 
+// src/components/HomePage/HomePage.js
 
-const UserIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-);
-const BellIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-);
-const SettingsIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-);
+import React, { Suspense } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, useGLTF, Environment } from '@react-three/drei';
+import './HomePage.css';
+import InteractiveCardButton from './InteractiveCardButton'; 
+import Header from './Header';
 
+// --- Componente del Modelo 3D ---
+function CharacterModel() {
+  const { scene } = useGLTF('/stylized_character/scene.gltf');
+  
+  scene.scale.set(1.5, 1.5, 1.5);
+  scene.position.set(-5, -2, 0);
+  scene.rotation.set(0, 0.7, 0);
+
+  return <primitive object={scene} />;
+}
+
+
+// --- Componente HomePage ---
 const HomePage = ({ user, handleLogout, onNavigate }) => {
+  const handleNavigation = (path) => {
+    onNavigate(path);
+  };
+
   return (
     <div className="homepage-container">
-      <header className="homepage-header">
-        <div className="logo">CircusMind</div>
-        <nav className="header-nav">
-          <button onClick={() => onNavigate('profile')} className="nav-icon-button" aria-label="Perfil"><UserIcon /></button>
-          <button onClick={() => onNavigate('notifications')} className="nav-icon-button" aria-label="Notificaciones"><BellIcon /></button>
-          <button onClick={() => onNavigate('settings')} className="nav-icon-button" aria-label="Ajustes"><SettingsIcon /></button>
-          <button onClick={handleLogout} className="logout-button-header">Cerrar Sesión</button>
-        </nav>
-      </header>
+      
+      {/* Canvas 3D */}
+      <Canvas className="canvas-background" camera={{ position: [0, 0, 9], fov: 50 }}>
+        <Suspense fallback={null}>
+          <ambientLight intensity={0.5} />
+          <directionalLight position={[10, 10, 5]} intensity={1.5} />
+          <Environment preset="city" /> 
+          <CharacterModel />
+          <OrbitControls enableZoom={false} enablePan={false} />
+        </Suspense>
+      </Canvas>
 
-      <main className="homepage-main">
-        <div className="welcome-message">
-            <h1>Bienvenido, {user?.displayName || user?.email || 'Jugador'}!</h1>
+      {/* Interfaz de Usuario */}
+      <div className="ui-container">
+        <Header onNavigate={handleNavigation} handleLogout={handleLogout} />
+
+        <main className="homepage-main">
+          <div className="welcome-message">
+            <h1>Bienvenido, {user?.displayName || 'Jugador'}!</h1>
             <p>¿Listo para un nuevo desafío?</p>
-        </div>
-        
-        <button className="play-now-button" onClick={() => onNavigate('trivia-random')}>
-          Jugar ahora
-        </button>
+          </div>
+          <button className="play-now-button" onClick={() => handleNavigation('trivia-random')}>
+            Jugar ahora
+          </button>
 
-        <div className="dashboard-grid">
-          <div className="card" onClick={() => onNavigate('category-selection')}>
-            <h3>Modo Clásico</h3>
-            <p>Trivias por categorías.</p>
+          <div className="dashboard-grid">
+            <InteractiveCardButton
+              title="Modo Clásico"
+              description="Trivias y categorías."
+              onClick={() => handleNavigation('category-selection')}
+            />
+            <InteractiveCardButton
+              title="Modo Torneo"
+              description="Torneos."
+              onClick={() => handleNavigation('tournament-lobby')}
+            />
+            <InteractiveCardButton
+              title="Aprendizaje"
+              description="Accede a los cursos interactivos."
+              onClick={() => handleNavigation('learning')}
+            />
+            <InteractiveCardButton
+              title="Leaderboards"
+              description="Ranking e historial."
+              onClick={() => handleNavigation('leaderboard')}
+            />
           </div>
-          {}
-          {}
-          <div className="card" onClick={() => onNavigate('tournament-lobby')}>
-            <h3>Modo Torneo</h3>
-            <p>Compite en rondas.</p>
-          </div>
-          <div className="card" onClick={() => onNavigate('learning')}>
-            <h3>Aprendizaje</h3>
-            <p>Accede a los cursos.</p>
-          </div>
-          {}
-          {}
-          <div className="card" onClick={() => onNavigate('leaderboard')}>
-            <h3>Leaderboards</h3>
-            <p>Ranking e historial.</p>
-          </div>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 };
 
 export default HomePage;
-

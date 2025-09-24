@@ -1,0 +1,62 @@
+/* src/components/Header/Header.css */
+
+.homepage-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: all;
+}
+
+.logo {
+  font-weight: 900;
+  font-size: 1.5rem;
+  color: var(--text-color); /* Asegura que el logo cambie de color */
+}
+
+.header-nav {
+  position: relative;
+  display: flex;
+  align-items: center;
+  /* Eliminamos el background-color y padding para quitar el "box" */
+  /* background-color: var(--card-background); */ 
+  /* padding: 8px; */
+  border-radius: 50px; /* Mantenemos el border-radius para la píldora */
+}
+
+/* La cápsula que se desliza */
+.header-pill {
+  position: absolute;
+  /* top: 8px; <-- Se ajustará dinámicamente según el botón */
+  left: 0;
+  background-color: var(--pill-background); /* Color de la cápsula (definido en HomePage.css) */
+  border-radius: 50px;
+  z-index: 1; /* Detrás de los botones */
+  transition: transform 0.3s ease-out, width 0.3s ease-out; /* La animación suave */
+  /* Asegura que la píldora se ajuste al alto de los botones */
+  height: calc(100% - 16px); /* 100% menos el doble del padding vertical del botón */
+}
+
+/* Botones y el ThemeToggle dentro de la barra */
+.header-nav button, 
+.header-nav > div { /* Afecta al div que contiene ThemeToggle */
+  position: relative;
+  z-index: 2; /* Encima de la cápsula */
+  background: none;
+  border: none;
+  color: var(--text-color);
+  margin: 0 5px;
+  padding: 10px 20px; /* Aquí definimos el padding de los botones */
+  cursor: pointer;
+  font-size: 1rem;
+  opacity: 0.8;
+  transition: opacity 0.2s ease, color 0.3s ease;
+  border-radius: 50px;
+}
+
+/* Estado de hover */
+.header-nav button:hover, 
+.header-nav > div:hover {
+  opacity: 1;
+  color: var(--hover-text-color); /* Usaremos una nueva variable para el color del texto en hover */
+}

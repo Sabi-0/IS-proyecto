@@ -6,6 +6,9 @@ import HomePage from './components/HomePage/HomePage';
 import CategorySelection from './components/Trivia/CategorySelection';
 import TriviaGame from './components/Trivia/TriviaGame';
 import TriviaResults from './components/Trivia/TriviaResults';
+import Leaderboard from './components/Leaderboard/Leaderboard'; 
+import TournamentLobby from './components/Tournament/TournamentLobby'; 
+
 import { auth } from './firebaseConfig.js';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 
@@ -31,15 +34,21 @@ function App() {
 
   const handleLogout = async () => await signOut(auth);
 
-  const fetchTriviaForCategory = async (categoryId, categoryName) => {
+  const fetchTrivia = async (categoryId, categoryName) => {
     setErrorMessage('');
     setAppState('loading-trivia');
-    setCurrentCategory({ id: categoryId, name: categoryName });
+    setCurrentCategory({ id: categoryId, name: categoryName || 'Aleatoria' });
+    
+    // Construir la URL de la API. 
+    const apiUrl = categoryId 
+      ? `https://opentdb.com/api.php?amount=10&category=${categoryId}&type=multiple`
+      : `https://opentdb.com/api.php?amount=10&type=multiple`;
+
     try {
-      const response = await fetch(`https://opentdb.com/api.php?amount=10&category=${categoryId}&type=multiple`);
+      const response = await fetch(apiUrl);
       if (!response.ok) throw new Error(`API Error: ${response.status}`);
       const data = await response.json();
-      if (data.response_code !== 0) throw new Error('API could not fetch questions for this category.');
+      if (data.response_code !== 0) throw new Error('API could not fetch questions.');
       
       setCurrentQuestions(data.results);
       setAppState('trivia-game');
@@ -57,12 +66,18 @@ function App() {
   
   const handlePlayAgain = () => setAppState('homepage');
   
-  const handleNavigation = (path) => setAppState(path);
+  const handleNavigation = (path) => { //el jugar ahora no servia xd, lo manejamos sin id por el momento
+    if (path === 'trivia-random') {
+      fetchTrivia(null); // Llamar a fetchTrivia sin ID de categoría
+    } else {
+      setAppState(path);
+    }
+    setErrorMessage('');
+  };
 
   const renderContent = () => {
     if (isAuthLoading) return <div className="loading-screen">Cargando...</div>;
     
-    // Mostramos el error sobre el HomePage si existe
     if (appState === 'homepage') {
         return (
             <div>
@@ -78,15 +93,23 @@ function App() {
       case 'auth':
         return <AuthPage onBack={() => setAppState('landing')} />;
       case 'category-selection':
-        return <CategorySelection onSelectCategory={fetchTriviaForCategory} onBack={() => setAppState('homepage')} />;
+        return <CategorySelection onSelectCategory={fetchTrivia} onBack={() => setAppState('homepage')} />;
       case 'loading-trivia':
         return <div className="loading-screen">Cargando trivia de {currentCategory.name}...</div>;
       case 'trivia-game':
         return <TriviaGame questions={currentQuestions} categoryName={currentCategory.name} onGameEnd={handleGameEnd} />;
       case 'trivia-results':
         return <TriviaResults score={finalScore} totalQuestions={currentQuestions.length} onPlayAgain={handlePlayAgain} />;
+      case 'leaderboard': 
+        return <Leaderboard onBack={() => setAppState('homepage')} />;
+      case 'tournament-lobby':
+        return <TournamentLobby onBack={() => setAppState('homepage')} />;
       default:
-        return <LandingPage onNavigateToAuth={() => setAppState('auth')} />;
+        // Por ahora, las otras navegaciones solo nos llevan de vuelta al home
+        // (profile, notifications, settings, learning)
+        console.warn(`Navegación a '${appState}' no implementada, volviendo a inicio.`);
+        setAppState('homepage');
+        return <HomePage user={user} handleLogout={handleLogout} onNavigate={handleNavigation} />;
     }
   };
 

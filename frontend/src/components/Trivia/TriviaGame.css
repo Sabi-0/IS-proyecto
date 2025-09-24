@@ -38,6 +38,21 @@
   color: #1E88E5;
 }
 
+/* --- ESTILOS PARA EL TEMPORIZADOR --- */
+.timer-container {
+  display: flex;
+  align-items: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.timer-icon {
+  margin-right: 8px;
+}
+/* --- FIN ESTILOS TEMPORIZADOR --- */
+
+
 .question-counter {
   font-size: 1rem;
   color: #888;

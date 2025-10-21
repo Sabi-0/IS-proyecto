@@ -1,5 +1,4 @@
-// --- LA LÍNEA CLAVE ---
-// Usamos "export const" para que pueda ser importado con llaves {} en App.js.
+
 export const triviaData = {
   Ciencia: [
     {

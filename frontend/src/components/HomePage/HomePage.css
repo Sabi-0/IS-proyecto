@@ -1,6 +1,68 @@
+/* src/HomePage.css */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+
+/* MODO OSCURO (POR DEFECTO) */
+:root {
+  --background-color: #1a1a1a;
+  --text-color: #f0f0f0;
+  --card-background: rgba(0, 0, 0, 0.4);
+  --card-border: rgba(255, 255, 255, 0.1);
+  --primary-button-bg: #ffffff;
+  --primary-button-text: #000000;
+  --pill-background: #ffffff;
+  --pill-text-color: #000000;
+}
+
+/* MODO CLARO */
+body[data-theme='light'] {
+  --background-color: #f0f0f0;
+  --text-color: #1a1a1a;
+  --card-background: rgba(255, 255, 255, 0.6);
+  --card-border: rgba(0, 0, 0, 0.1);
+  --primary-button-bg: #000000;
+  --primary-button-text: #ffffff;
+  --pill-background: #000000;
+  --pill-text-color: #ffffff;
+}
+
+/* Estilos generales */
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  overflow-y: auto; /* Permitir scroll vertical si es necesario */
+  transition: background-color 0.3s, color 0.3s;
+}
+
 .homepage-container {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+}
+
+/* CAPA 1: Canvas 3D */
+.canvas-background {
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* CAPA 2: Contenedor de la UI */
+.ui-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
   display: flex;
   flex-direction: column;
+<<<<<<< HEAD
   height: 100vh;
   background-color: #f5f7fa; 
   color: #333;
@@ -47,14 +109,63 @@
 
 .logout-button:hover {
   background-color: #c62828; 
+=======
+  padding: 2rem;
+  box-sizing: border-box;
+  pointer-events: none;
+>>>>>>> a56f97d891f5963c550f91bdc157968f0c8c56d2
 }
 
+/* Main: Se centra vertical y horizontalmente */
 .homepage-main {
   flex-grow: 1;
-  padding: 2rem;
-  text-align: center;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  text-align: center;
+  width: 100%;
+}
+
+.welcome-message h1 {
+  font-size: 3.5rem;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
+}
+
+.welcome-message p {
+  font-size: 1.2rem;
+  opacity: 0.8;
+  margin-top: 0;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+}
+
+.play-now-button {
+  background-color: var(--primary-button-bg);
+  color: var(--primary-button-text);
+  border: none;
+  padding: 1rem 3rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  border-radius: 50px;
+  cursor: pointer;
+  margin-top: 1.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  pointer-events: all;
+  box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.play-now-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0px 15px 40px rgba(0, 0, 0, 0.7);
+}
+
+/* Grid para los botones del dashboard */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-top: 5rem; 
+  width: 100%;
+  max-width: 1200px;
 }

@@ -1,0 +1,85 @@
+.interactive-card {
+  position: relative;
+  overflow: hidden;
+  background: var(--card-background);
+  border: 1px solid var(--card-border);
+  border-radius: 15px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  text-align: center;
+  z-index: 1; /* Establece un contexto de apilamiento */
+  pointer-events: all; /* <-- AÑADIDO PARA ARREGLAR EL CLIC */
+}
+
+/* El elemento ::before es el brillo que gira */
+.interactive-card::before {
+  content: "";
+  position: absolute;
+  z-index: -2; /* Se coloca detrás de todo */
+
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 150%;
+  height: 150%;
+  
+  /* Gradiente cónico que crea el "haz" de luz */
+  background: conic-gradient(
+    from 180deg,
+    transparent 70%,
+    rgba(138, 43, 226, 0.6) 85%, /* El color morado del brillo */
+    transparent 100%
+  );
+  
+  /* La animación que lo hace girar */
+  animation: rotate 4s linear infinite;
+}
+
+/* El elemento ::after es la "máscara" que crea el efecto de borde */
+.interactive-card::after {
+  content: "";
+  position: absolute;
+  z-index: -1; /* Se coloca entre el brillo y el contenido */
+
+  /* Lo hacemos un poco más pequeño para dejar un borde visible */
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+
+  /* Tiene el mismo fondo que la tarjeta para tapar el centro del brillo */
+  background: var(--card-background);
+  border-radius: 13px;
+}
+
+/* Animación de rotación */
+@keyframes rotate {
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+.interactive-card:hover {
+  transform: translateY(-10px);
+}
+
+/* Contenido del texto */
+.interactive-card-content {
+  position: relative;
+  z-index: 2; /* Siempre por encima de todo lo demás */
+}
+
+.interactive-card-content h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.2rem;
+  color: var(--text-color);
+}
+
+.interactive-card-content p {
+  margin: 0;
+  opacity: 0.7;
+  color: var(--text-color);
+}

@@ -62,58 +62,9 @@ body {
   z-index: 2;
   display: flex;
   flex-direction: column;
-<<<<<<< HEAD
-  height: 100vh;
-  background-color: #f5f7fa; 
-  color: #333;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-}
-
-.homepage-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 2rem;
-  background-color: #ffffff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Sombra más sutil */
-}
-
-.homepage-header h1 {
-  margin: 0;
-  font-size: 1.5rem;
-  color: #1E88E5; 
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-}
-
-.user-info span {
-  margin-right: 1rem;
-  font-weight: 500;
-  color: #555; /* Un gris oscuro para el texto */
-}
-
-.logout-button {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 5px;
-  background-color: #E53935; 
-  color: white;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: bold;
-  transition: background-color 0.2s;
-}
-
-.logout-button:hover {
-  background-color: #c62828; 
-=======
   padding: 2rem;
   box-sizing: border-box;
   pointer-events: none;
->>>>>>> a56f97d891f5963c550f91bdc157968f0c8c56d2
 }
 
 /* Main: Se centra vertical y horizontalmente */

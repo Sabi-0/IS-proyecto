@@ -21,9 +21,9 @@ const decodeHTML = (html) => {
   return txt.value;
 };
 
-// MYMEMORY API
+// --- NUEVA FUNCIÓN DE TRADUCCIÓN CON MYMEMORY API ---
 async function translateTriviaWithMyMemory(questions) {
-  console.log("Preparing texts for MyMemory API ");
+  console.log("--- Translation Step 1: Preparing texts for MyMemory API ---");
   
   const uniqueTexts = new Set();
   questions.forEach(q => {

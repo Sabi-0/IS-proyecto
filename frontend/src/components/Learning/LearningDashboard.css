@@ -1,0 +1,108 @@
+.learning-dashboard-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* Alinear arriba */
+  min-height: 100vh;
+  background-color: #f5f7fa;
+  padding: 40px 20px;
+}
+
+.learning-dashboard-box {
+  background-color: white;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 900px;
+  text-align: center;
+  position: relative;
+}
+
+.learning-dashboard-box h1 {
+  font-size: 2.5rem;
+  color: #1E88E5;
+  margin-bottom: 10px;
+}
+
+.learning-dashboard-box p {
+  font-size: 1.2rem;
+  color: #6c757d;
+  margin-bottom: 40px;
+}
+
+.course-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 25px;
+}
+
+.course-card {
+  background-color: #ffffff;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+  border-left: 5px solid #1E88E5;
+  overflow: hidden; /* Para el badge */
+}
+
+.course-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.course-card h3 {
+  margin: 10px 0 10px;
+  font-size: 1.4rem;
+  color: #333;
+}
+
+.course-card p {
+  font-size: 1rem;
+  color: #6c757d;
+  margin-bottom: 0;
+}
+
+.level-badge {
+  position: absolute;
+  top: 15px;
+  right: -30px; /* Escondido inicialmente */
+  background-color: #FFA726; /* Naranja por defecto */
+  color: white;
+  padding: 5px 30px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  transform: rotate(45deg);
+  transform-origin: top right;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.level-badge.level-básico {
+  background-color: #66BB6A; /* Verde */
+}
+.level-badge.level-intermedio {
+  background-color: #FFA726; /* Naranja */
+}
+.level-badge.level-avanzado {
+  background-color: #E53935; /* Rojo */
+}
+
+
+.back-button-learning {
+  position: absolute;
+  top: 25px;
+  left: 25px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #aaa;
+  transition: color 0.2s;
+}
+
+.back-button-learning:hover {
+  color: #333;
+}

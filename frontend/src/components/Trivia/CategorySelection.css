@@ -30,7 +30,6 @@
   gap: 20px;
 }
 
-/* Y la regla de estilo es para '.category-button' */
 .category-button {
   padding: 25px;
   font-size: 1.2rem;
@@ -49,13 +48,52 @@
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
+/* --- ESTILOS PARA LA DIFICULTAD --- */
+.difficulty-grid {
+  display: flex; /* Cambiamos a flex para ponerlos en fila */
+  justify-content: center;
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.difficulty-button {
+  padding: 20px 40px;
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.difficulty-button:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Colores específicos para cada dificultad */
+.difficulty-easy {
+  background: linear-gradient(135deg, #66BB6A, #81C784); /* Verde */
+}
+.difficulty-medium {
+  background: linear-gradient(135deg, #FFA726, #FFB74D); /* Naranja */
+}
+.difficulty-hard {
+  background: linear-gradient(135deg, #E53935, #EF5350); /* Rojo */
+}
+/* --- FIN ESTILOS DIFICULTAD --- */
+
+
 .back-button {
   position: absolute;
   top: 25px;
   left: 25px;
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: 1rem; /* Ajustado */
+  font-weight: bold;
   cursor: pointer;
   color: #aaa;
   transition: color 0.2s;

@@ -1,0 +1,132 @@
+.course-view-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  background-color: #f5f7fa;
+  padding: 40px 20px;
+}
+
+.course-view-box {
+  background-color: white;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 800px;
+  position: relative;
+}
+
+.course-header {
+  text-align: center;
+  margin-bottom: 40px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 30px;
+}
+
+.course-header h2 {
+  font-size: 2.5rem;
+  color: #1E88E5;
+  margin-bottom: 10px;
+}
+
+.course-header p {
+  font-size: 1.2rem;
+  color: #6c757d;
+  margin-bottom: 20px;
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 10px;
+  background-color: #e0e0e0;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 5px;
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: #4CAF50; /* Verde */
+  transition: width 0.5s ease-in-out;
+}
+
+.progress-text {
+    font-size: 0.9rem;
+    color: #555;
+    font-weight: bold;
+}
+
+
+.course-view-box h3 {
+  text-align: center;
+  font-size: 1.8rem;
+  color: #333;
+  margin-bottom: 25px;
+}
+
+.lesson-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.lesson-item {
+  display: flex;
+  align-items: center;
+  padding: 18px 20px;
+  margin-bottom: 10px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  cursor: not-allowed; /* Por defecto no son clickables */
+  opacity: 0.6;
+  transition: background-color 0.2s;
+}
+
+.lesson-item.completed {
+  opacity: 1;
+  background-color: #e8f5e9; /* Verde claro */
+  border-left: 5px solid #4CAF50;
+  cursor: default; /* Completadas no son clickables */
+}
+
+.lesson-item.next-lesson {
+  opacity: 1;
+  cursor: pointer; /* La siguiente lección sí es clickable */
+  background-color: #fff;
+  border-left: 5px solid #1E88E5;
+}
+
+.lesson-item.next-lesson:hover {
+    background-color: #f0f8ff; /* Azul muy claro al pasar el mouse */
+}
+
+
+.lesson-status-icon {
+  margin-right: 15px;
+  font-size: 1.3rem;
+}
+
+.lesson-title {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.back-button-course {
+  position: absolute;
+  top: 25px;
+  left: 25px;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  color: #aaa;
+  transition: color 0.2s;
+}
+
+.back-button-course:hover {
+  color: #333;
+}

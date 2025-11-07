@@ -89,12 +89,11 @@ app.post('/sync-user', verificarToken, async (req, res) => {
   }
 });
 
-// --- (Aquí irán tus futuras rutas: /leaderboard, /save-score, etc.) ---
 // --- RUTA MODIFICADA: Guardar Puntuación de Partida ---
 app.post('/save-score', verificarToken, async (req, res) => {
+// ... (código existente de /save-score)
   const user_uid = req.user.uid;
   
-  // Ahora recibimos 'correctAnswers' e 'incorrectAnswers'
   const { score, questionsTotal, gameMode, categoryName, difficulty, correctAnswers, incorrectAnswers } = req.body;
 
   if (score === undefined || questionsTotal === undefined || correctAnswers === undefined || incorrectAnswers === undefined) {
@@ -106,7 +105,6 @@ app.post('/save-score', verificarToken, async (req, res) => {
   try {
     await client.query('BEGIN');
 
-    // 1. Insertamos la sesión de juego (esto no cambia)
     const sessionQuery = `
       INSERT INTO game_sessions 
         (user_uid, game_mode, category_name, difficulty, score, questions_total, started_at, ended_at)
@@ -115,7 +113,6 @@ app.post('/save-score', verificarToken, async (req, res) => {
     `;
     await client.query(sessionQuery, [user_uid, gameMode, categoryName, difficulty, score, questionsTotal]);
     
-    // 2. Actualizamos las estadísticas acumulativas (AHORA CORRECTAMENTE)
     const statsQuery = `
       UPDATE user_stats 
       SET 
@@ -125,7 +122,6 @@ app.post('/save-score', verificarToken, async (req, res) => {
         incorrect_answers = incorrect_answers + $3
       WHERE user_uid = $4
     `;
-    // Usamos los nuevos valores recibidos
     await client.query(statsQuery, [score, correctAnswers, incorrectAnswers, user_uid]); 
 
     await client.query('COMMIT');
@@ -144,12 +140,11 @@ app.post('/save-score', verificarToken, async (req, res) => {
 
 // --- RUTA MODIFICADA: Obtener Perfil de Usuario ---
 app.get('/profile', verificarToken, async (req, res) => {
+// ... (código existente de /profile)
   const user_uid = req.user.uid;
   console.log(`Petición recibida para /profile del usuario ${user_uid}`);
   
   try {
-    // --- ¡CORRECCIÓN CLAVE! ---
-    // Nos aseguramos de que la consulta pida 'incorrect_answers'
     const query = `
       SELECT 
         u.display_name, 
@@ -181,9 +176,8 @@ app.get('/profile', verificarToken, async (req, res) => {
 
 // POST /profile/avatar - Actualiza el avatar del usuario
 app.post('/profile/avatar', verificarToken, async (req, res) => {
-// ... (código existente sin cambios)
+// ... (código existente de /profile/avatar)
   const user_uid = req.user.uid;
-// ... (el resto del código)
   const { avatarUrl } = req.body; 
 
   if (!avatarUrl) {
@@ -216,9 +210,8 @@ app.post('/profile/avatar', verificarToken, async (req, res) => {
 
 // --- RUTA: Obtener Leaderboard ---
 app.get('/leaderboard', async (req, res) => {
-// ... (código existente sin cambios)
+// ... (código existente de /leaderboard)
   console.log("Petición recibida para /leaderboard");
-// ... (el resto del código)
   try {
     const query = `
       SELECT 
@@ -245,17 +238,24 @@ app.get('/leaderboard', async (req, res) => {
 
 // --- Configuración del Servidor HTTP y Socket.io ---
 const server = http.createServer(app); 
-// ... (código existente de Socket.io sin cambios)
+
+// --- ¡¡¡CORRECCIÓN CLAVE DE CORS PARA SOCKET.IO!!! ---
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
+    // Ahora aceptamos ambas URLs: tu localhost y tu Vercel
+    origin: [
+      "http://localhost:3000", 
+      "https://is-proyecto-doud.vercel.app"
+    ],
     methods: ["GET", "POST"]
   }
 });
+// --- FIN DE LA CORRECCIÓN ---
 
 let connectedUsers = []; 
 
 io.on('connection', (socket) => {
+// ... (código existente de io.on('connection'))
   console.log('Un usuario se ha conectado:', socket.id);
 
   socket.on('joinLobby', (userData) => {
@@ -276,5 +276,6 @@ io.on('connection', (socket) => {
 
 // --- Iniciar el Servidor ---
 server.listen(port, () => {
+// ... (código existente sin cambios)
   console.log(`Servidor API y WebSocket corriendo en http://localhost:${port}`);
 });

@@ -4,6 +4,7 @@ require('dotenv').config();
 // --- Importaciones ---
 // ... (imports existentes: express, cors, admin, pg, http, Server)
 const express = require('express');
+// ... (el resto de tus imports)
 const cors = require('cors');
 const admin = require('firebase-admin');
 const { Pool } = require('pg');
@@ -40,6 +41,7 @@ app.use(express.json());
 async function verificarToken(req, res, next) {
 // ... (código existente de verificarToken)
   const token = req.headers.authorization?.split('Bearer ')[1];
+// ... (el resto del middleware)
   if (!token) {
     return res.status(401).send('No autorizado: Token no proporcionado.');
   }
@@ -57,6 +59,7 @@ async function verificarToken(req, res, next) {
 app.post('/sync-user', verificarToken, async (req, res) => {
 // ... (código existente de /sync-user)
   const firebaseUid = req.user.uid;
+// ... (el resto del código de sync-user)
   
   if (!req.user.email) {
     console.log(`Intento de sincronización de usuario anónimo (UID: ${firebaseUid}). Sincronización omitida.`);
@@ -90,24 +93,24 @@ app.post('/sync-user', verificarToken, async (req, res) => {
 });
 
 // --- (Aquí irán tus futuras rutas: /leaderboard, /save-score, etc.) ---
-// --- NUEVA RUTA: Guardar Puntuación de Partida ---
+// --- RUTA MODIFICADA: Guardar Puntuación de Partida ---
 app.post('/save-score', verificarToken, async (req, res) => {
   const user_uid = req.user.uid;
-  // Obtenemos los datos de la partida desde el frontend
-  const { score, questionsTotal, gameMode, categoryName, difficulty } = req.body;
+  
+  // --- ¡CORRECCIÓN CLAVE! ---
+  // Ahora recibimos 'correctAnswers' e 'incorrectAnswers'
+  const { score, questionsTotal, gameMode, categoryName, difficulty, correctAnswers, incorrectAnswers } = req.body;
 
-  // Validamos que tenemos los datos mínimos
-  if (score === undefined || questionsTotal === undefined) {
-    return res.status(400).send({ error: 'Faltan datos de la puntuación.' });
+  if (score === undefined || questionsTotal === undefined || correctAnswers === undefined || incorrectAnswers === undefined) {
+    return res.status(400).send({ error: 'Faltan datos de la puntuación (score, total, correct, incorrect).' });
   }
 
-  const client = await pool.connect(); // Conectamos a la DB
+  const client = await pool.connect(); 
 
   try {
-    // Iniciamos una transacción para asegurar que ambas operaciones (guardar sesión y actualizar stats) se completen
     await client.query('BEGIN');
 
-    // 1. Insertamos la sesión de juego en la tabla 'game_sessions'
+    // 1. Insertamos la sesión de juego (esto no cambia)
     const sessionQuery = `
       INSERT INTO game_sessions 
         (user_uid, game_mode, category_name, difficulty, score, questions_total, started_at, ended_at)
@@ -116,40 +119,111 @@ app.post('/save-score', verificarToken, async (req, res) => {
     `;
     await client.query(sessionQuery, [user_uid, gameMode, categoryName, difficulty, score, questionsTotal]);
     
-    // 2. Actualizamos las estadísticas acumulativas del usuario en 'user_stats'
+    // 2. Actualizamos las estadísticas acumulativas (AHORA CORRECTAMENTE)
     const statsQuery = `
       UPDATE user_stats 
       SET 
         total_score = total_score + $1,
         games_played = games_played + 1,
-        correct_answers = correct_answers + $2 
-      WHERE user_uid = $3
+        correct_answers = correct_answers + $2,
+        incorrect_answers = incorrect_answers + $3
+      WHERE user_uid = $4
     `;
-    await client.query(statsQuery, [score, score, user_uid]); // Asumimos que score = N° de respuestas correctas por ahora
+    // Usamos los nuevos valores recibidos
+    await client.query(statsQuery, [score, correctAnswers, incorrectAnswers, user_uid]); 
 
-    // Si todo va bien, confirmamos la transacción
     await client.query('COMMIT');
     
-    console.log(`Puntuación guardada para el usuario ${user_uid}. Score: ${score}`);
+    console.log(`Puntuación guardada para el usuario ${user_uid}. Score: ${score}, Correctas: ${correctAnswers}, Incorrectas: ${incorrectAnswers}`);
     res.status(200).send({ message: 'Puntuación guardada exitosamente.' });
 
   } catch (error) {
-    // Si algo falla, revertimos la transacción
     await client.query('ROLLBACK');
     console.error('Error al guardar la puntuación:', error);
     res.status(500).send({ error: 'Error interno al guardar la puntuación.' });
   } finally {
-    // Liberamos la conexión
     client.release();
   }
 });
 
-// --- NUEVA RUTA: Obtener Leaderboard ---
-// Esta ruta es pública (no usa 'verificarToken') para que cualquiera la pueda ver.
-app.get('/leaderboard', async (req, res) => {
-  console.log("Petición recibida para /leaderboard");
+// --- RUTA MODIFICADA: Obtener Perfil de Usuario ---
+app.get('/profile', verificarToken, async (req, res) => {
+  const user_uid = req.user.uid;
+  console.log(`Petición recibida para /profile del usuario ${user_uid}`);
+  
   try {
-    // Unimos 'user_stats' con 'users' para obtener los nombres
+    // --- ¡CORRECCIÓN CLAVE! ---
+    // Nos aseguramos de que la consulta pida 'incorrect_answers'
+    const query = `
+      SELECT 
+        u.display_name, 
+        u.email, 
+        u.avatar_url,
+        u.created_at,
+        s.total_score, 
+        s.games_played, 
+        s.correct_answers, 
+        s.incorrect_answers 
+      FROM users u
+      LEFT JOIN user_stats s ON u.firebase_uid = s.user_uid
+      WHERE u.firebase_uid = $1;
+    `;
+    const { rows } = await pool.query(query, [user_uid]);
+
+    if (rows.length === 0) {
+      return res.status(404).send({ error: 'Perfil de usuario no encontrado.' });
+    }
+    
+    console.log("Perfil de usuario enviado:", rows[0]);
+    res.status(200).json(rows[0]); 
+
+  } catch (error) {
+    console.error('Error al obtener el perfil:', error);
+    res.status(500).send({ error: 'Error interno al obtener el perfil.' });
+  }
+});
+
+// POST /profile/avatar - Actualiza el avatar del usuario
+app.post('/profile/avatar', verificarToken, async (req, res) => {
+// ... (código existente sin cambios)
+  const user_uid = req.user.uid;
+// ... (el resto del código)
+  const { avatarUrl } = req.body; 
+
+  if (!avatarUrl) {
+    return res.status(400).send({ error: 'No se proporcionó URL de avatar.' });
+  }
+
+  console.log(`Actualizando avatar para ${user_uid} a: ${avatarUrl}`);
+
+  try {
+    const query = `
+      UPDATE users 
+      SET avatar_url = $1 
+      WHERE firebase_uid = $2
+      RETURNING avatar_url;
+    `;
+    const { rows } = await pool.query(query, [avatarUrl, user_uid]);
+
+    if (rows.length === 0) {
+      return res.status(404).send({ error: 'Usuario no encontrado para actualizar.' });
+    }
+
+    res.status(200).send({ message: 'Avatar actualizado exitosamente.', avatarUrl: rows[0].avatar_url });
+
+  } catch (error) {
+    console.error('Error al actualizar el avatar:', error);
+    res.status(500).send({ error: 'Error interno al actualizar el avatar.' });
+  }
+});
+
+
+// --- RUTA: Obtener Leaderboard ---
+app.get('/leaderboard', async (req, res) => {
+// ... (código existente sin cambios)
+  console.log("Petición recibida para /leaderboard");
+// ... (el resto del código)
+  try {
     const query = `
       SELECT 
         u.display_name, 
@@ -164,7 +238,7 @@ app.get('/leaderboard', async (req, res) => {
     const { rows } = await pool.query(query);
     
     console.log("Leaderboard enviado:", rows);
-    res.status(200).json(rows); // Enviamos el top 10 como JSON
+    res.status(200).json(rows); 
 
   } catch (error) {
     console.error('Error al obtener el leaderboard:', error);

@@ -1,7 +1,8 @@
+// ... (imports existentes)
 import React, { useEffect, useState } from 'react';
 
 // Imports de componentes
-// ... (todos tus imports de componentes se mantienen igual)
+// ... (el resto de tus imports)
 import AuthPage from './components/AuthPage/AuthPage';
 import LandingPage from './components/LandingPage/LandingPage';
 import HomePage from './components/HomePage/HomePage';
@@ -14,8 +15,10 @@ import MultiplayerLobby from './components/Multiplayer/MultiplayerLobby';
 import LearningDashboard from './components/Learning/LearningDashboard';
 import CourseView from './components/Learning/CourseView';
 import LessonView from './components/Learning/LessonView';
+import ProfilePage from './components/Profile/ProfilePage'; 
 
 // Imports de Firebase
+// ... (el resto de tus imports)
 import { auth } from './firebaseConfig.js';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 
@@ -26,6 +29,7 @@ import { lessonsData } from './data/learningData';
 // --- Funciones de utilidad y traducción ---
 const decodeHTML = (html) => {
 // ... (código existente sin cambios)
+// ... (código de traducción existente sin cambios)
   const txt = document.createElement("textarea");
   txt.innerHTML = html;
   return txt.value;
@@ -34,49 +38,60 @@ const decodeHTML = (html) => {
 async function translateTriviaWithMyMemory(questions) {
 // ... (código de traducción existente sin cambios)
     console.log("--- Translation Step 1: Preparing texts for MyMemory API ---");
+// ... (código de traducción existente sin cambios)
     const uniqueTexts = new Set();
+// ... (código de traducción existente sin cambios)
     questions.forEach(q => {
         uniqueTexts.add(decodeHTML(q.question));
         uniqueTexts.add(decodeHTML(q.correct_answer));
         q.incorrect_answers.forEach(ans => uniqueTexts.add(decodeHTML(ans)));
     });
+// ... (código de traducción existente sin cambios)
     const textsToTranslate = Array.from(uniqueTexts);
     const translationPromises = textsToTranslate.map(text => {
+// ... (código de traducción existente sin cambios)
         const apiUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|es`;
         return fetch(apiUrl).then(res => res.json());
     });
+// ... (código de traducción existente sin cambios)
     console.log("--- Translation Step 2: Calling MyMemory API concurrently ---");
     const responses = await Promise.all(translationPromises);
+// ... (código de traducción existente sin cambios)
     const translationMap = new Map();
     responses.forEach((res, index) => {
+// ... (código de traducción existente sin cambios)
         if (res.responseData && res.responseData.translatedText) {
         const originalText = textsToTranslate[index];
         const translatedText = res.responseData.translatedText;
         translationMap.set(originalText, translatedText);
+// ... (código de traducción existente sin cambios)
         } else {
             translationMap.set(textsToTranslate[index], textsToTranslate[index]);
             console.warn(`Failed to translate text: ${textsToTranslate[index]}`);
         }
     });
+// ... (código de traducción existente sin cambios)
     console.log("--- Translation Step 3: Built the translation map ---");
     const translatedQuestions = questions.map(q => ({
+// ... (código de traducción existente sin cambios)
         ...q,
         question: translationMap.get(decodeHTML(q.question)) || decodeHTML(q.question),
         correct_answer: translationMap.get(decodeHTML(q.correct_answer)) || decodeHTML(q.correct_answer),
         incorrect_answers: q.incorrect_answers.map(ans => translationMap.get(decodeHTML(ans)) || decodeHTML(ans))
     }));
+// ... (código de traducción existente sin cambios)
     console.log("--- Translation Step 4: Translation complete! ---");
     return translatedQuestions;
 }
 
 function App() {
+// ... (estados existentes sin cambios)
   const [user, setUser] = useState(null);
   const [appState, setAppState] = useState('landing');
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
-  const [isUserSynced, setIsUserSynced] = useState(false); // Estado para evitar syncs repetidos
+  const [isUserSynced, setIsUserSynced] = useState(false); 
   
-// ... (otros estados existentes sin cambios)
   const [currentQuestions, setCurrentQuestions] = useState([]);
   const [currentCategory, setCurrentCategory] = useState({ id: 0, name: '', difficulty: '' });
   const [finalScore, setFinalScore] = useState(0);
@@ -87,7 +102,7 @@ function App() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-// ... (código existente de onAuthStateChanged, incluyendo /sync-user)
+// ... (código de sync de usuario existente sin cambios)
       setUser(currentUser);
       if (currentUser) {
         setAppState('homepage');
@@ -140,7 +155,7 @@ function App() {
   };
 
   const fetchTrivia = async (categoryId, categoryName, difficulty) => {
-// ... (código existente sin cambios)
+// ... (código de fetchTrivia existente sin cambios)
     setErrorMessage('');
     setAppState('loading-trivia');
     setCurrentCategory({ id: categoryId, name: categoryName || 'Aleatoria', difficulty: difficulty || 'any' });
@@ -178,16 +193,23 @@ function App() {
 
   // --- MODIFICACIÓN: Guardar Puntuación ---
   const handleGameEnd = (score) => {
-    setFinalScore(score); // Guardamos el puntaje para la pantalla de resultados
-    setAppState('trivia-results'); // Mostramos la pantalla de resultados inmediatamente
+    setFinalScore(score); 
+    setAppState('trivia-results'); 
 
-    // Después de mostrar los resultados, intentamos guardar en segundo plano
     if (user && !user.isAnonymous) {
       console.log('Juego terminado, guardando puntuación en el backend...');
+      
+      // --- ¡CORRECCIÓN CLAVE! ---
+      // Calculamos las respuestas correctas e incorrectas
+      const correctAnswers = score; // Asumiendo 1 punto por respuesta
+      const incorrectAnswers = currentQuestions.length - correctAnswers;
+      
       user.getIdToken(true)
         .then(idToken => {
           const gameData = {
-            score: score,
+            score: score, // Mantenemos el puntaje total (podría ser > 1 por pregunta en el futuro)
+            correctAnswers: correctAnswers, // Enviamos el conteo de correctas
+            incorrectAnswers: incorrectAnswers, // Enviamos el conteo de incorrectas
             questionsTotal: currentQuestions.length,
             gameMode: currentCategory.id ? 'classic' : 'random_api',
             categoryName: currentCategory.name,
@@ -209,8 +231,6 @@ function App() {
         })
         .catch(error => {
           console.error('Error al guardar la puntuación:', error);
-          // No mostramos un error al usuario aquí, ya que el juego ya terminó.
-          // Solo lo registramos en la consola.
         });
     }
   };
@@ -222,21 +242,19 @@ function App() {
   };
 
   // --- LÓGICA DE PROGRESO DE APRENDIZAJE ---
-  const handleSelectCourse = (courseId) => {
 // ... (código existente sin cambios)
+  const handleSelectCourse = (courseId) => {
       setSelectedCourseId(courseId);
       setAppState('course-view');
   };
 
   const handleSelectLesson = (courseId, lessonId) => {
-// ... (código existente sin cambios)
       setSelectedCourseId(courseId);
       setSelectedLessonId(lessonId);
       setAppState('lesson-view');
   };
   
   const handleCompleteLesson = (courseId, lessonId) => {
-// ... (código existente sin cambios)
       console.log(`Intentando completar lección ${lessonId} del curso ${courseId}`);
       const courseLessons = lessonsData[courseId];
       if (courseLessons) {
@@ -252,21 +270,24 @@ function App() {
   };
 
   const handleBackToCourseList = () => {
-// ... (código existente sin cambios)
       setSelectedCourseId(null);
       setAppState('learning');
   };
   
   const handleBackToLessonList = () => {
-// ... (código existente sin cambios)
       setSelectedLessonId(null);
       setAppState('course-view');
   };
 
   const handleNavigation = (path) => {
 // ... (código existente sin cambios)
-    if (path === 'trivia-random') fetchTrivia(null, null, 'medium');
-    else setAppState(path);
+    console.log(`[DEBUG App.js] handleNavigation fue llamado con: '${path}'`);
+    
+    const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    console.log(`[DEBUG App.js] Path limpiado es: '${cleanPath}'`);
+    
+    if (cleanPath === 'trivia-random') fetchTrivia(null, null, 'medium');
+    else setAppState(cleanPath); 
     setErrorMessage('');
   };
 
@@ -283,9 +304,12 @@ function App() {
       );
     }
 
+    console.log(`[DEBUG App.js] renderContent se esta ejecutando con appState: '${appState}'`);
+
     switch (appState) {
       case 'landing':
         return <LandingPage onNavigateToAuth={() => setAppState('auth')} />;
+// ... (el resto de los casos se mantienen igual)
       case 'auth':
         return <AuthPage onBack={() => setAppState('landing')} />;
       
@@ -312,9 +336,20 @@ function App() {
       case 'multiplayer-lobby':
         return <MultiplayerLobby user={user} onBack={() => setAppState('homepage')} />;
       
+      case 'profile':
+        console.log("[DEBUG App.js] Renderizando: ProfilePage");
+        return <ProfilePage user={user} onBack={() => setAppState('homepage')} />;
+
       default:
-        console.warn(`Navegación a '${appState}' no implementada, volviendo a inicio.`);
-        return <HomePage user={user} handleLogout={handleLogout} onNavigate={handleNavigation} />;
+        console.warn(`[DEBUG App.js] ADVERTENCIA: appState '${appState}' no fue encontrado en el switch. CAYENDO EN DEFAULT.`);
+        return (
+            <div style={{ padding: '20px', color: 'red', backgroundColor: 'black', height: '100vh', fontFamily: 'monospace' }}>
+                <h1>Error de Navegación</h1>
+                <p>Se intentó navegar a un estado desconocido: <strong>'{appState}'</strong></p>
+                <p>Por favor, revisa la consola (F12) y reinicia el servidor de `npm start`.</p>
+                <button onClick={() => setAppState('homepage')} style={{padding: '10px', fontSize: '16px'}}>Volver a Inicio</button>
+            </div>
+        );
     }
   };
 

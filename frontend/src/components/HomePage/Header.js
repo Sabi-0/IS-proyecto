@@ -1,8 +1,6 @@
-// src/components/Header/Header.js
-
 import React, { useState, useRef } from 'react';
 import './Header.css'; // Crearemos este archivo ahora
-import ThemeToggle from '../../ThemeToggle';
+import ThemeToggle from '../../ThemeToggle'; // Crearemos este componente
 
 const Header = ({ onNavigate, handleLogout }) => {
   const navRef = useRef(null);
@@ -14,6 +12,9 @@ const Header = ({ onNavigate, handleLogout }) => {
 
   const handleMouseEnter = (e) => {
     const button = e.currentTarget;
+    // Añadimos un chequeo por si el navRef aún no está listo
+    if (!navRef.current) return;
+    
     const { width, height, left } = button.getBoundingClientRect();
     const parentLeft = navRef.current.getBoundingClientRect().left;
 
@@ -38,11 +39,15 @@ const Header = ({ onNavigate, handleLogout }) => {
         onMouseLeave={handleMouseLeave}
       >
         <div className="header-pill" style={pillStyle}></div>
-        <button onMouseEnter={handleMouseEnter} onClick={() => onNavigate('/profile')}>Perfil</button>
-        <button onMouseEnter={handleMouseEnter} onClick={() => onNavigate('/notifications')}>Notificaciones</button>
-        <button onMouseEnter={handleMouseEnter} onClick={() => onNavigate('/settings')}>Ajustes</button>
+        {/* --- CORRECCIÓN CLAVE --- 
+            Quitamos la barra '/' de las rutas para que coincidan con App.js
+        */}
+        <button onMouseEnter={handleMouseEnter} onClick={() => onNavigate('profile')}>Perfil</button>
+        <button onMouseEnter={handleMouseEnter} onClick={() => onNavigate('notifications')}>Notificaciones</button>
+        <button onMouseEnter={handleMouseEnter} onClick={() => onNavigate('settings')}>Ajustes</button>
         <button onMouseEnter={handleMouseEnter} onClick={handleLogout}>Cerrar Sesión</button>
-        <div onMouseEnter={handleMouseEnter}>
+        {/* Envolvemos el ThemeToggle en un div para que handleMouseEnter funcione */}
+        <div onMouseEnter={handleMouseEnter} className="theme-toggle-wrapper">
           <ThemeToggle />
         </div>
       </nav>

@@ -1,42 +1,58 @@
+/* src/LandingPage.css */
+
+/* Variables semánticas (asegúrate de que estén definidas en tu :root global) */
+:root {
+  --color-accent: rgba(138, 43, 226, 0.9); /* Púrpura */
+}
+
+/* Contenedor principal (Layout) */
 .landing-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: #f5f7fa;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: transparent; /* El fondo lo da el 'body' */
+  font-family: 'Inter', sans-serif; /* Fuente del tema */
   text-align: center;
 }
 
+/* Caja de contenido */
 .landing-box {
   padding: 50px;
 }
 
 .landing-box h1 {
-  color: #1E88E5; /* Main brand blue */
+  color: var(--color-accent); /* Acento púrpura */
   font-size: 3rem;
+  font-weight: 700;
   margin-bottom: 1rem;
 }
 
 .landing-box p {
-  color: #555;
+  color: var(--text-color); /* Color del tema */
+  opacity: 0.8;
   font-size: 1.25rem;
   margin-bottom: 2.5rem;
 }
 
+/* Botón de "Entrar" (Pill Outline) */
 .landing-button {
-  padding: 15px 30px;
-  border: none;
-  border-radius: 8px;
-  background-color: #1E88E5; /* Main brand blue */
-  color: white;
+  /* Estilo Pill Outline */
+  padding: 1rem 2.5rem;
   font-size: 1.1rem;
-  font-weight: bold;
+  font-weight: 700;
+  border-radius: 50px;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
+  transition: all 0.3s ease;
+  
+  background-color: transparent;
+  border: 2px solid var(--color-accent);
+  color: var(--color-accent);
 }
 
 .landing-button:hover {
-  background-color: #1565C0; /* Darker blue */
-  transform: translateY(-2px);
+  background-color: var(--color-accent);
+  color: var(--primary-button-text); /* Color de texto del tema */
+  transform: scale(1.05);
+  box-shadow: 0 5px 20px rgba(138, 43, 226, 0.3);
 }

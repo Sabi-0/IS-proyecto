@@ -1,53 +1,79 @@
+/* src/Results.css */
+
+/* Variables semánticas (asegúrate de que estén definidas en tu :root global) */
+:root {
+  --color-accent: rgba(138, 43, 226, 0.9); /* Púrpura */
+  --color-easy: #66BB6A; /* Verde */
+}
+
+/* Contenedor principal (Centra la caja) */
 .results-container {
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background-color: #f5f7fa;
+  background-color: transparent; /* El fondo lo da el 'body' */
   text-align: center;
+  padding: 20px; /* Añadido para móviles */
+  box-sizing: border-box;
 }
 
+/* Caja de Resultados (Tarjeta Glassmorphism) */
 .results-box {
-  background: #fff;
+  background: var(--card-background);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  
   padding: 40px 60px;
   border-radius: 15px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .results-box h1 {
-  color: #1E88E5;
+  color: var(--color-accent); /* Acento púrpura */
+  font-weight: 700;
+  margin-top: 0;
 }
 
 .score-text {
   font-size: 1.5rem;
   margin: 20px 0;
+  color: var(--text-color); /* Color del tema */
+  opacity: 0.8;
 }
 
 .score-text span {
   font-weight: bold;
   font-size: 2rem;
-  color: #4CAF50;
+  color: var(--color-easy); /* Verde para el puntaje */
 }
 
 .percentage {
-    font-size: 4rem;
-    font-weight: bold;
-    color: #1E88E5;
-    margin: 20px 0 40px;
+  font-size: 4rem;
+  font-weight: bold;
+  color: var(--color-accent); /* Acento púrpura */
+  margin: 20px 0 40px;
 }
 
+/* Botón de "Jugar de Nuevo" (Pill Outline) */
 .play-again-button {
-  background-color: #1E88E5;
-  color: white;
-  border: none;
-  padding: 15px 30px;
+  /* Estilo Pill Outline */
+  padding: 1rem 2.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
   border-radius: 50px;
-  font-size: 1.2rem;
-  font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
+  
+  background-color: transparent;
+  border: 2px solid var(--color-accent);
+  color: var(--color-accent);
 }
 
 .play-again-button:hover {
-  background-color: #1565C0;
+  background-color: var(--color-accent);
+  color: var(--primary-button-text);
+  transform: scale(1.05);
+  box-shadow: 0 5px 20px rgba(138, 43, 226, 0.3);
 }

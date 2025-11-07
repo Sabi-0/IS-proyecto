@@ -1,29 +1,49 @@
+/* src/MultiplayerLobby.css */
+
+/* Variables semánticas (asegúrate de que estén definidas en tu :root global) */
+:root {
+  --color-accent: rgba(138, 43, 226, 0.9); /* Púrpura */
+  --color-easy: #66BB6A; /* Verde */
+  --color-hard: #E53935; /* Rojo */
+}
+
+/* Contenedor principal (Centra la caja) */
 .multiplayer-lobby-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: #f5f7fa;
+  background-color: transparent; /* El fondo lo da el 'body' */
   padding: 20px;
+  box-sizing: border-box;
 }
 
+/* Caja del Lobby (Tarjeta Glassmorphism) */
 .multiplayer-lobby-box {
-  background-color: white;
+  background: var(--card-background);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  
   padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  border-radius: 15px; /* Bordes del tema */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  
   width: 100%;
-  max-width: 700px;
+  max-width: 700px; /* Mantenemos tu ancho original */
   text-align: center;
   position: relative;
 }
 
 .multiplayer-lobby-box h2 {
   font-size: 2.5rem;
-  color: #1E88E5;
+  color: var(--color-accent); /* Acento púrpura */
+  margin-top: 0; /* Limpieza */
   margin-bottom: 20px;
+  font-weight: 700;
 }
 
+/* Píldora de Estado de Conexión */
 .connection-status {
   padding: 8px 15px;
   border-radius: 20px;
@@ -31,99 +51,115 @@
   display: inline-block;
   margin-bottom: 20px;
 }
-
 .connection-status.connected {
-  background-color: #e8f5e9; /* Verde claro */
-  color: #4CAF50; /* Verde */
+  background-color: rgba(102, 187, 106, 0.1); /* Tinte verde */
+  color: var(--color-easy);
 }
-
 .connection-status.disconnected {
-  background-color: #ffebee; /* Rojo claro */
-  color: #E53935; /* Rojo */
+  background-color: rgba(229, 57, 53, 0.1); /* Tinte rojo */
+  color: var(--color-hard);
 }
 
 .welcome-text {
-    font-style: italic;
-    color: #6c757d;
-    margin-bottom: 30px;
+  font-style: italic;
+  color: var(--text-color); /* Color del tema */
+  opacity: 0.7;
+  margin-bottom: 30px;
 }
 
 .lobby-content-mp h3 {
   font-size: 1.5rem;
-  color: #333;
+  color: var(--text-color); /* Color del tema */
   margin-bottom: 15px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--card-border); /* Borde del tema */
   padding-bottom: 10px;
+  font-weight: 700;
 }
 
+/* Lista de Usuarios (Tarjeta glass interna) */
 .user-list {
   list-style: none;
   padding: 0;
   margin: 0 0 30px 0;
-  max-height: 200px; /* Limitar altura para scroll */
-  overflow-y: auto; /* Añadir scroll si hay muchos usuarios */
-  border: 1px solid #eee;
-  border-radius: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  
+  background: rgba(0, 0, 0, 0.2); /* Fondo más oscuro */
+  border: 1px solid var(--card-border);
+  border-radius: 8px; /* Un radio más pequeño para la tarjeta interna */
 }
 
 .user-list li {
   padding: 12px 20px;
   font-size: 1.1rem;
   text-align: left;
-  border-bottom: 1px solid #eee;
+  color: var(--text-color); /* Color del tema */
+  border-bottom: 1px solid var(--card-border); /* Borde del tema */
 }
-
 .user-list li:last-child {
   border-bottom: none;
 }
-
 .user-list li.current-user {
   font-weight: bold;
-  color: #1E88E5;
+  color: var(--color-accent); /* Acento púrpura */
 }
 
 .empty-lobby-text {
-  color: #aaa;
+  color: var(--text-color); /* Color del tema */
+  opacity: 0.6;
   font-style: italic;
   margin: 20px 0;
 }
 
-
+/* Botón de Empezar (Pill Outline) */
 .start-game-button-placeholder {
-  padding: 15px 30px;
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: white;
-  background-color: #4CAF50; /* Verde */
-  border: none;
-  border-radius: 8px;
+  /* Estilo Pill Outline */
+  padding: 1rem 2.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border-radius: 50px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
   margin-top: 20px;
+  
+  background-color: transparent;
+  border: 2px solid var(--color-easy);
+  color: var(--color-easy);
 }
+
+.start-game-button-placeholder:not(:disabled):hover {
+  background-color: var(--color-easy);
+  color: var(--primary-button-text); /* Color de texto del tema */
+  transform: scale(1.05);
+  box-shadow: 0 5px 20px rgba(102, 187, 106, 0.3);
+}
+
 .start-game-button-placeholder:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-    opacity: 0.7;
+  background-color: var(--card-border);
+  border-color: var(--card-border);
+  color: var(--text-color);
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-.start-game-button-placeholder:hover:not(:disabled) {
-  background-color: #388E3C;
-}
 
-
+/* Botón de Volver */
 .back-button-lobby-mp {
   position: absolute;
-  top: 25px;
-  left: 25px;
+  top: 25px; /* Mantenemos tu posición original */
+  left: 25px; /* Mantenemos tu posición original */
+  
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: 1rem; /* Estandarizado */
+  font-weight: bold;
   cursor: pointer;
-  color: #aaa;
-  transition: color 0.2s;
+  
+  color: var(--text-color);
+  opacity: 0.6;
+  transition: opacity 0.2s;
 }
 
 .back-button-lobby-mp:hover {
-  color: #333;
+  opacity: 1;
 }

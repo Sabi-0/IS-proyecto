@@ -3,42 +3,37 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
 
 /* Contenedor principal:
-  - Sigue centrando el contenido vertical y horizontalmente.
-  - Le quitamos el padding para que el hijo pueda crecer.
+  Lo hacemos "full screen" y usamos flex para centrar la caja de selección.
+  Hereda el --background-color del body.
 */
 .category-selection-container {
   width: 100%;
-  min-height: 100vh;
+  min-height: 100vh; /* Usamos min-height para que crezca si el contenido es mucho */
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 0; /* <-- CAMBIO: De 2rem a 0 */
+  padding: 2rem;
   box-sizing: border-box;
 }
 
 /*
   Caja de selección:
-  - ¡YA NO ES UNA TARJETA!
-  - Le quitamos todos los estilos de tarjeta (fondo, borde, sombra, blur).
-  - Ahora es un contenedor "invisible" que organiza el contenido.
-  - Tiene un max-width de 1200px (para ser adaptativo) y padding interno.
+  Esta es nuestra tarjeta principal de "glassmorphism".
+  No tiene el borde brillante (para no competir con los botones).
 */
 .category-selection-box {
-  /* --- ESTILOS DE TARJETA ELIMINADOS --- */
-  background: transparent; /* <-- CAMBIO */
-  border: none; /* <-- CAMBIO */
-  backdrop-filter: none; /* <-- CAMBIO */
-  border-radius: 0; /* <-- CAMBIO */
-  box-shadow: none; /* <-- CAMBIO */
-  
-  /* --- NUEVOS ESTILOS DE LAYOUT --- */
+  background: var(--card-background);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 2.5rem;
+  border-radius: 15px;
   width: 100%;
-  max-width: 1200px; /* <-- ADAPTATIVO: Ocupa todo en cel, max 1200px en PC */
-  padding: 3rem; /* Padding *interno* para que el contenido no pegue a los bordes */
-
-  /* --- Estilos que se quedan --- */
+  max-width: 900px; /* Un poco más de espacio */
   text-align: center;
   position: relative;
+  /* La sombra la definimos aquí para que funcione en ambos modos */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 /* Título (Elige Categoría / Dificultad) */
@@ -46,18 +41,18 @@
   font-size: 2.2rem;
   font-weight: 700;
   color: var(--text-color);
-  margin-top: 1rem;
+  margin-top: 0;
   margin-bottom: 2.5rem;
 }
 
 /*
   Botón de Volver:
-  - Ahora se alinea con el padding de 3rem del nuevo layout.
+  Lo posicionamos y le damos el color de texto del tema.
 */
 .back-button {
   position: absolute;
-  top: 3rem; /* <-- CAMBIO */
-  left: 3rem; /* <-- CAMBIO */
+  top: 1.5rem;
+  left: 1.5rem;
   background: none;
   border: none;
   font-size: 1rem;
@@ -72,14 +67,19 @@
   opacity: 1;
 }
 
-/* Grid de Categorías (Sin cambios) */
+/* Grid de Categorías:
+  Mantenemos el grid responsivo.
+*/
 .category-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.5rem;
 }
 
-/* Botón de Categoría (Sin cambios) */
+/*
+  Botón de Categoría:
+  ¡Aquí aplicamos el estilo EXACTO del .interactive-card!
+*/
 .category-button {
   position: relative;
   overflow: hidden;
@@ -94,13 +94,14 @@
   text-align: center;
   z-index: 1;
 
+  /* Estilos del texto del botón */
   font-family: 'Inter', sans-serif;
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--text-color);
 }
 
-/* Efecto de brillo ::before (Sin cambios) */
+/* El elemento ::before es el brillo que gira */
 .category-button::before {
   content: "";
   position: absolute;
@@ -119,7 +120,7 @@
   animation: rotate 4s linear infinite;
 }
 
-/* Máscara ::after (Sin cambios) */
+/* El elemento ::after es la "máscara" que crea el efecto de borde */
 .category-button::after {
   content: "";
   position: absolute;
@@ -132,7 +133,7 @@
   border-radius: 13px;
 }
 
-/* Animación de rotación (Sin cambios) */
+/* Copiamos la animación de rotación */
 @keyframes rotate {
   100% {
     transform: translate(-50%, -50%) rotate(360deg);
@@ -143,17 +144,23 @@
   transform: translateY(-10px);
 }
 
-/* --- ESTILOS PARA LA DIFICULTAD (Sin cambios) --- */
+/* --- ESTILOS PARA LA DIFICULTAD --- */
 
 .difficulty-grid {
   display: flex;
-  flex-wrap: wrap; 
+  flex-wrap: wrap; /* Para que sea responsivo en móviles */
   justify-content: center;
   gap: 1.5rem;
   margin-top: 2rem;
 }
 
+/*
+  Botón de Dificultad:
+  Usamos un estilo "outline" que se rellena en hover.
+  Mantenemos los colores (verde, naranja, rojo) para la usabilidad.
+*/
 .difficulty-button {
+  /* Definimos los colores en variables locales */
   --color-easy: #66BB6A;
   --color-medium: #FFA726;
   --color-hard: #E53935;
@@ -161,14 +168,16 @@
   padding: 1rem 2.5rem;
   font-size: 1.1rem;
   font-weight: 700;
-  border-radius: 50px; 
+  border-radius: 50px; /* Estilo "pill" */
   cursor: pointer;
   transition: all 0.3s ease;
   
+  /* Por defecto: Borde de color, fondo transparente */
   background-color: transparent;
   border: 2px solid;
 }
 
+/* Asignamos el color específico a cada botón */
 .difficulty-easy {
   border-color: var(--color-easy);
   color: var(--color-easy);
@@ -182,6 +191,11 @@
   color: var(--color-hard);
 }
 
+/* Hover:
+  Se rellena del color y el texto pasa a ser el del modo claro/oscuro.
+  Usamos var(--primary-button-text) para que el texto sea blanco en 
+  modo oscuro y negro en modo claro (o viceversa, según lo definiste).
+*/
 .difficulty-easy:hover {
   background-color: var(--color-easy);
   color: var(--primary-button-text);

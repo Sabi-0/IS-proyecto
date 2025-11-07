@@ -1,27 +1,73 @@
+/* src/Auth.css */
+
+/* Variables de color semánticas (asegúrate de que estén definidas en tu :root global) */
+:root {
+  --background-color: #1a1a1a;
+  --text-color: #f0f0f0;
+  --card-background: rgba(0, 0, 0, 0.4);
+  --card-border: rgba(255, 255, 255, 0.1);
+  --primary-button-bg: #ffffff;
+  --primary-button-text: #000000;
+  --color-accent: rgba(138, 43, 226, 0.9); /* Púrpura */
+  --color-easy: #66BB6A; /* Verde */
+  --color-hard: #E53935; /* Rojo */
+  --color-google: #DB4437; /* Rojo Google */
+  --color-guest: #FFA726; /* Naranja Invitado */
+}
+
+/* Contenedor principal */
 .auth-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  /* Usamos el mismo fondo gris claro para consistencia */
-  background-color: #f5f7fa; 
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* El fondo viene del 'body', no de aquí */
+  background-color: transparent; 
+  font-family: 'Inter', sans-serif; /* Usamos la fuente del proyecto */
 }
 
+/* Caja de Autenticación (Glassmorphism) */
 .auth-box {
-  background-color: #fff;
+  background: var(--card-background);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  
   padding: 40px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Sombra más sutil */
+  border-radius: 15px; /* Bordes redondeados del tema */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); /* Sombra más pronunciada */
+  
   text-align: center;
   width: 100%;
-  max-width: 400px;
+  max-width: 400px; /* Mantenemos tu ancho */
+  position: relative; /* Para el botón de volver */
 }
+
+/* Botón de volver (si aplica) */
+.auth-box .back-button {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: none;
+    border: none;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    color: var(--text-color);
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+}
+
+.auth-box .back-button:hover {
+    opacity: 1;
+}
+
 
 .auth-box h2 {
   margin-bottom: 30px;
-  /* Aplicamos el azul principal de tu marca al título */
-  color: #303031; 
+  color: var(--text-color); /* Color del tema */
+  font-size: 2.5rem; /* Hice el título más grande para que coincida con otros headers */
+  font-weight: 700;
 }
 
 .input-group {
@@ -33,62 +79,77 @@
   display: block;
   margin-bottom: 8px;
   font-weight: bold;
-  color: #555;
+  color: var(--text-color); /* Color del tema */
+  opacity: 0.8;
 }
 
 .input-group input {
-  width: calc(100% - 20px);
+  width: calc(100% - 20px); /* Mantenemos tu cálculo original */
   padding: 12px 10px;
-  border: 1px solid #666363;
-  border-radius: 5px;
+  
+  /* Estilo Inset Oscuro para los inputs */
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--card-border);
+  color: var(--text-color);
+  
+  border-radius: 8px;
   font-size: 16px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+/* Focus para inputs */
+.input-group input:focus {
+  outline: none;
+  border-color: var(--color-accent); /* Borde púrpura en focus */
+  box-shadow: 0 0 10px rgba(138, 43, 226, 0.5); /* Resplandor púrpura */
+}
+
+
 .button-group {
-  display: flex;
+  display: flex; /* Mantenemos flex para tu layout original */
   justify-content: space-between;
   margin-top: 25px;
 }
 
+/* Botones principales (Login, Registro) */
 .button-group button,
 .social-auth-options button {
   padding: 12px 20px;
   border: none;
-  border-radius: 5px;
+  border-radius: 5px; /* Mantenemos tus bordes de botón */
   cursor: pointer;
   font-size: 16px;
   font-weight: bold;
   transition: background-color 0.3s ease;
-  width: 48%;
+  width: 48%; /* Mantenemos tu ancho */
 }
 
-/* Botón principal de Iniciar Sesión */
+/* Botón principal de Iniciar Sesión (Púrpura) */
 .button-group button[type="submit"] {
-  background-color: #393a3b; /* Azul principal de la marca */
-  color: white;
+  background-color: var(--color-accent); /* Púrpura de acento */
+  color: var(--primary-button-text); /* Texto blanco/negro del tema */
 }
-
 .button-group button[type="submit"]:hover {
-  background-color: #494b4d; /* Tono más oscuro de azul */
+  background-color: rgba(138, 43, 226, 0.7); /* Tono más suave */
 }
 
-/* Botón secundario de Registrarse */
+/* Botón secundario de Registrarse (Gris del tema) */
 .button-group button[type="button"] {
-  background-color: #6c757d;
-  color: white;
+  background-color: var(--text-color); /* Color de texto del tema */
+  color: var(--primary-button-text); /* Texto blanco/negro del tema */
+  opacity: 0.8;
 }
-
 .button-group button[type="button"]:hover {
-  background-color: #5a6268;
+  opacity: 1;
 }
 
 .divider {
   margin: 30px 0;
   font-size: 14px;
-  color: #aaa;
+  color: var(--text-color); /* Color del tema */
+  opacity: 0.6;
   position: relative;
 }
-
 .divider::before,
 .divider::after {
   content: '';
@@ -96,19 +157,14 @@
   top: 50%;
   width: 40%;
   height: 1px;
-  background-color: #eee;
+  background-color: var(--card-border); /* Borde del tema */
 }
+.divider::before { left: 0; }
+.divider::after { right: 0; }
 
-.divider::before {
-  left: 0;
-}
-
-.divider::after {
-  right: 0;
-}
 
 .social-auth-options button {
-  width: 100%;
+  width: 100%; /* Mantenemos tu ancho */
   margin-bottom: 15px;
   display: flex;
   align-items: center;
@@ -117,39 +173,37 @@
 
 /* Botón de Google */
 .google-btn {
-  background-color: #3b3939; /* Rojo principal de la marca */
+  background-color: var(--color-google); /* Rojo Google */
   color: white;
 }
-
 .google-btn:hover {
-  background-color: #3a3737; /* Tono más oscuro de rojo */
+  background-color: #C0392B; /* Tono más oscuro */
 }
 
 .google-btn span::before {
-    content: 'G';
-    font-weight: bold;
-    font-size: 1.2em;
-    margin-right: 8px;
+  content: 'G';
+  font-weight: bold;
+  font-size: 1.2em;
+  margin-right: 8px;
 }
 
 /* Botón de Invitado */
 .guest-btn {
-  background-color: #3d3c3a; /* Amarillo principal de la marca */
-  color: #f0eaea;
+  background-color: var(--color-guest); /* Naranja Invitado */
+  color: white;
 }
-
 .guest-btn:hover {
-  background-color: #383735;
+  background-color: #E67E22; /* Tono más oscuro */
 }
 
+/* Mensajes */
 .error-message {
-  color: #2e2b2b; /* Rojo de la marca para errores */
+  color: var(--color-hard); /* Rojo del tema */
   margin-top: 15px;
   font-size: 14px;
 }
-
 .success-message {
-  color: #2f312f; /* Verde de la marca para mensajes de éxito */
+  color: var(--color-easy); /* Verde del tema */
   margin-top: 15px;
   font-size: 14px;
 }

@@ -43,7 +43,6 @@ const Header = ({ onNavigate, handleLogout }) => {
             Quitamos la barra '/' de las rutas para que coincidan con App.js
         */}
         <button onMouseEnter={handleMouseEnter} onClick={() => onNavigate('profile')}>Perfil</button>
-        <button onMouseEnter={handleMouseEnter} onClick={() => onNavigate('notifications')}>Notificaciones</button>
         <button onMouseEnter={handleMouseEnter} onClick={() => onNavigate('settings')}>Ajustes</button>
         <button onMouseEnter={handleMouseEnter} onClick={handleLogout}>Cerrar Sesión</button>
         {/* Envolvemos el ThemeToggle en un div para que handleMouseEnter funcione */}

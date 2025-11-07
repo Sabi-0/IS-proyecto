@@ -1,9 +1,8 @@
-// ... (imports existentes)
 import React, { useEffect, useState } from 'react';
 
 // Imports de componentes
-// ... (todos tus imports de componentes se mantienen igual)
-import AuthPage from './components/AuthPage/AuthPage.js';
+// ... (todos tus imports de componentes)
+import AuthPage from './components/Authpage/AuthPage';
 import LandingPage from './components/LandingPage/LandingPage';
 import HomePage from './components/HomePage/HomePage';
 import CategorySelection from './components/Trivia/CategorySelection';
@@ -18,18 +17,20 @@ import LessonView from './components/Learning/LessonView';
 import ProfilePage from './components/Profile/ProfilePage'; 
 
 // Imports de Firebase
-// ... (el resto de tus imports)
 import { auth } from './firebaseConfig.js';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 
 // Imports de datos
 import { lessonsData } from './data/learningData';
 
+// --- ¡URL DEL BACKEND PARA DESPLIEGUE! ---
+// ¡YA ESTÁ ACTUALIZADA CON TU URL DE NGROK!
+const BACKEND_URL = 'https://glairy-debroah-downwardly.ngrok-free.dev';
+// ---
 
 // --- Funciones de utilidad y traducción ---
 const decodeHTML = (html) => {
 // ... (código existente sin cambios)
-// ... (código de traducción existente sin cambios)
   const txt = document.createElement("textarea");
   txt.innerHTML = html;
   return txt.value;
@@ -38,48 +39,37 @@ const decodeHTML = (html) => {
 async function translateTriviaWithMyMemory(questions) {
 // ... (código de traducción existente sin cambios)
     console.log("--- Translation Step 1: Preparing texts for MyMemory API ---");
-// ... (código de traducción existente sin cambios)
     const uniqueTexts = new Set();
-// ... (código de traducción existente sin cambios)
     questions.forEach(q => {
         uniqueTexts.add(decodeHTML(q.question));
         uniqueTexts.add(decodeHTML(q.correct_answer));
         q.incorrect_answers.forEach(ans => uniqueTexts.add(decodeHTML(ans)));
     });
-// ... (código de traducción existente sin cambios)
     const textsToTranslate = Array.from(uniqueTexts);
     const translationPromises = textsToTranslate.map(text => {
-// ... (código de traducción existente sin cambios)
         const apiUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|es`;
         return fetch(apiUrl).then(res => res.json());
     });
-// ... (código de traducción existente sin cambios)
     console.log("--- Translation Step 2: Calling MyMemory API concurrently ---");
     const responses = await Promise.all(translationPromises);
-// ... (código de traducción existente sin cambios)
     const translationMap = new Map();
     responses.forEach((res, index) => {
-// ... (código de traducción existente sin cambios)
         if (res.responseData && res.responseData.translatedText) {
         const originalText = textsToTranslate[index];
         const translatedText = res.responseData.translatedText;
         translationMap.set(originalText, translatedText);
-// ... (código de traducción existente sin cambios)
         } else {
             translationMap.set(textsToTranslate[index], textsToTranslate[index]);
             console.warn(`Failed to translate text: ${textsToTranslate[index]}`);
         }
     });
-// ... (código de traducción existente sin cambios)
     console.log("--- Translation Step 3: Built the translation map ---");
     const translatedQuestions = questions.map(q => ({
-// ... (código de traducción existente sin cambios)
         ...q,
         question: translationMap.get(decodeHTML(q.question)) || decodeHTML(q.question),
         correct_answer: translationMap.get(decodeHTML(q.correct_answer)) || decodeHTML(q.correct_answer),
         incorrect_answers: q.incorrect_answers.map(ans => translationMap.get(decodeHTML(ans)) || decodeHTML(ans))
     }));
-// ... (código de traducción existente sin cambios)
     console.log("--- Translation Step 4: Translation complete! ---");
     return translatedQuestions;
 }
@@ -102,41 +92,47 @@ function App() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-// ... (código de sync de usuario existente sin cambios)
       setUser(currentUser);
       if (currentUser) {
         setAppState('homepage');
         if (currentUser.isAnonymous) {
+// ... (código existente sin cambios)
             console.log('Usuario invitado detectado. No se requiere sincronización con el backend.');
             setIsAuthLoading(false);
             return; 
         }
         if (isUserSynced) {
+// ... (código existente sin cambios)
             setIsAuthLoading(false);
             return; 
         }
         console.log('Usuario registrado autenticado, sincronizando con el backend...');
         currentUser.getIdToken(true) 
             .then((idToken) => {
-                return fetch('http://localhost:4000/sync-user', { 
+                return fetch(`${BACKEND_URL}/sync-user`, { 
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${idToken}` 
+                        'Authorization': `Bearer ${idToken}`,
+                        // --- ¡CORRECCIÓN NGROK! ---
+                        'ngrok-skip-browser-warning': 'true'
                     }
                 });
             })
             .then(response => {
+// ... (código existente sin cambios)
                 if (!response.ok) { 
                     throw new Error(`El backend respondió con estado: ${response.status}`);
                 }
                 return response.json();
             })
             .then(data => {
+// ... (código existente sin cambios)
                 console.log('Respuesta de sincronización del backend:', data.message);
                 setIsUserSynced(true); 
             })
             .catch(error => {
+// ... (código existente sin cambios)
                 console.error('Error al sincronizar usuario con el backend:', error);
                 setErrorMessage('Error al conectar con el servidor.');
             });
@@ -156,6 +152,7 @@ function App() {
 
   const fetchTrivia = async (categoryId, categoryName, difficulty) => {
 // ... (código de fetchTrivia existente sin cambios)
+// ... (Este código llama a OpenTDB y MyMemory, no a tu backend, así que se queda igual)
     setErrorMessage('');
     setAppState('loading-trivia');
     setCurrentCategory({ id: categoryId, name: categoryName || 'Aleatoria', difficulty: difficulty || 'any' });
@@ -191,41 +188,40 @@ function App() {
     }
   };
 
-  // --- MODIFICACIÓN: Guardar Puntuación ---
   const handleGameEnd = (score) => {
     setFinalScore(score); 
     setAppState('trivia-results'); 
 
     if (user && !user.isAnonymous) {
       console.log('Juego terminado, guardando puntuación en el backend...');
-      
-      // --- ¡CORRECCIÓN CLAVE! ---
-      // Calculamos las respuestas correctas e incorrectas
-      const correctAnswers = score; // Asumiendo 1 punto por respuesta
+      const correctAnswers = score;
       const incorrectAnswers = currentQuestions.length - correctAnswers;
       
       user.getIdToken(true)
         .then(idToken => {
           const gameData = {
-            score: score, // Mantenemos el puntaje total (podría ser > 1 por pregunta en el futuro)
-            correctAnswers: correctAnswers, // Enviamos el conteo de correctas
-            incorrectAnswers: incorrectAnswers, // Enviamos el conteo de incorrectas
+            score: score,
+            correctAnswers: correctAnswers,
+            incorrectAnswers: incorrectAnswers,
             questionsTotal: currentQuestions.length,
             gameMode: currentCategory.id ? 'classic' : 'random_api',
             categoryName: currentCategory.name,
             difficulty: currentCategory.difficulty
           };
 
-          return fetch('http://localhost:4000/save-score', {
+          return fetch(`${BACKEND_URL}/save-score`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${idToken}`
+              'Authorization': `Bearer ${idToken}`,
+              // --- ¡CORRECCIÓN NGROK! ---
+              'ngrok-skip-browser-warning': 'true'
             },
             body: JSON.stringify(gameData)
           });
         })
         .then(response => response.json())
+// ... (código existente sin cambios)
         .then(data => {
           console.log('Respuesta de /save-score:', data.message);
         })
@@ -234,7 +230,6 @@ function App() {
         });
     }
   };
-  // --- FIN DE LA MODIFICACIÓN ---
 
   const handlePlayAgain = () => {
 // ... (código existente sin cambios)
@@ -275,7 +270,7 @@ function App() {
   };
   
   const handleBackToLessonList = () => {
-      setSelectedLessonId(null);
+      setSelectedCourseId(null);
       setAppState('course-view');
   };
 
@@ -307,9 +302,9 @@ function App() {
     console.log(`[DEBUG App.js] renderContent se esta ejecutando con appState: '${appState}'`);
 
     switch (appState) {
+// ... (todos tus casos existentes se mantienen igual)
       case 'landing':
         return <LandingPage onNavigateToAuth={() => setAppState('auth')} />;
-// ... (el resto de los casos se mantienen igual)
       case 'auth':
         return <AuthPage onBack={() => setAppState('landing')} />;
       
@@ -331,17 +326,22 @@ function App() {
 
       case 'leaderboard':
         return <Leaderboard onBack={() => setAppState('homepage')} />;
+        
+      // --- ¡CORRECCIÓN DE RUTA DE TORNEO! ---
       case 'tournament-lobby':
-        return <TournamentLobby onBack={() => setAppState('homepage')} />;
+        // Esto ahora apunta al lobby REAL, no al placeholder
+        return <MultiplayerLobby user={user} onBack={() => setAppState('homepage')} />;
       case 'multiplayer-lobby':
         return <MultiplayerLobby user={user} onBack={() => setAppState('homepage')} />;
       
       case 'profile':
+// ... (código existente sin cambios)
         console.log("[DEBUG App.js] Renderizando: ProfilePage");
         return <ProfilePage user={user} onBack={() => setAppState('homepage')} />;
 
       default:
         console.warn(`[DEBUG App.js] ADVERTENCIA: appState '${appState}' no fue encontrado en el switch. CAYENDO EN DEFAULT.`);
+// ... (código de error existente sin cambios)
         return (
             <div style={{ padding: '20px', color: 'red', backgroundColor: 'black', height: '100vh', fontFamily: 'monospace' }}>
                 <h1>Error de Navegación</h1>

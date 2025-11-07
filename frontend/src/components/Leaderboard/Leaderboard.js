@@ -1,27 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import './Leaderboard.css';
 
-// ¡Ya no necesitamos mockLeaderboardData!
+// ¡URL DEL BACKEND PARA DESPLIEGUE!
+const BACKEND_URL = 'https://glairy-debroah-downwardly.ngrok-free.dev';
 
 const Leaderboard = ({ onBack }) => {
-  // Estados para manejar los datos reales
+// ... (estados existentes sin cambios)
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // useEffect para cargar los datos cuando el componente se monta
   useEffect(() => {
     const fetchLeaderboard = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        // Llamamos a nuestro nuevo endpoint del backend
-        const response = await fetch('http://localhost:4000/leaderboard');
+        const response = await fetch(`${BACKEND_URL}/leaderboard`, {
+            headers: {
+                // --- ¡CORRECCIÓN NGROK! ---
+                'ngrok-skip-browser-warning': 'true'
+            }
+        });
         if (!response.ok) {
           throw new Error('No se pudo cargar el leaderboard.');
         }
+// ... (código existente sin cambios)
         const data = await response.json();
-        setLeaderboardData(data); // Guardamos los datos reales en el estado
+        setLeaderboardData(data); 
       } catch (err) {
         setError(err.message);
         console.error("Error al cargar leaderboard:", err);
@@ -30,16 +35,16 @@ const Leaderboard = ({ onBack }) => {
     };
 
     fetchLeaderboard();
-  }, []); // El array vacío [] asegura que esto solo se ejecute una vez
+  }, []); 
 
   return (
     <div className="leaderboard-container">
+// ... (código de renderizado existente sin cambios)
       <div className="leaderboard-box">
         <button onClick={onBack} className="back-button-leaderboard">← Volver al Inicio</button>
         <h1>🏆 Leaderboard Global 🏆</h1>
         <p>¡Descubre quiénes son los mejores jugadores!</p>
         
-        {/* Manejamos los 3 estados posibles: Cargando, Error, Éxito */}
         {isLoading && <div className="loading-leaderboard">Cargando ranking...</div>}
         
         {error && <div className="error-leaderboard">{error}</div>}
@@ -54,7 +59,6 @@ const Leaderboard = ({ onBack }) => {
               </tr>
             </thead>
             <tbody>
-              {/* Mapeamos sobre los datos REALES del estado */}
               {leaderboardData.map((player, index) => (
                 <tr key={index} className={index < 3 ? 'top-player' : ''}>
                   <td className="position-cell">{index + 1}</td>

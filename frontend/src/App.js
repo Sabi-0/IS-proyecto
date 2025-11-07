@@ -87,63 +87,56 @@ function App() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+// ... (código existente de onAuthStateChanged, incluyendo /sync-user)
       setUser(currentUser);
       if (currentUser) {
         setAppState('homepage');
-
-        // --- ¡CORRECCIÓN CLAVE! ---
-        // Solo sincronizamos si el usuario NO es anónimo y NO se ha sincronizado ya.
         if (currentUser.isAnonymous) {
             console.log('Usuario invitado detectado. No se requiere sincronización con el backend.');
             setIsAuthLoading(false);
-            return; // No continuamos con la sincronización
+            return; 
         }
-        
         if (isUserSynced) {
             setIsAuthLoading(false);
-            return; // Ya se sincronizó en esta sesión
+            return; 
         }
-        // --- FIN DE LA CORRECCIÓN ---
-
-        // Sincronizamos al usuario con nuestra DB de Supabase
         console.log('Usuario registrado autenticado, sincronizando con el backend...');
-        currentUser.getIdToken(true) // Obtenemos el ID Token de Firebase
+        currentUser.getIdToken(true) 
             .then((idToken) => {
-                return fetch('http://localhost:4000/sync-user', { // Llamamos al backend
+                return fetch('http://localhost:4000/sync-user', { 
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${idToken}` // Enviamos el token para verificación
+                        'Authorization': `Bearer ${idToken}` 
                     }
                 });
             })
             .then(response => {
-                if (!response.ok) { // Manejar errores de fetch (como un 500)
+                if (!response.ok) { 
                     throw new Error(`El backend respondió con estado: ${response.status}`);
                 }
                 return response.json();
             })
             .then(data => {
                 console.log('Respuesta de sincronización del backend:', data.message);
-                setIsUserSynced(true); // Marcamos como sincronizado
+                setIsUserSynced(true); 
             })
             .catch(error => {
                 console.error('Error al sincronizar usuario con el backend:', error);
                 setErrorMessage('Error al conectar con el servidor.');
             });
-        // --- FIN DE LA CONEXIÓN ---
       } else {
         setAppState('landing');
-        setIsUserSynced(false); // Resetear al cerrar sesión
+        setIsUserSynced(false); 
       }
       setIsAuthLoading(false);
     });
     return () => unsubscribe();
-  }, [isUserSynced]); // Dependemos de 'isUserSynced'
+  }, [isUserSynced]); 
 
   const handleLogout = async () => {
+// ... (código existente sin cambios)
     await signOut(auth);
-    // El onAuthStateChanged se encargará de resetear los estados
   };
 
   const fetchTrivia = async (categoryId, categoryName, difficulty) => {
@@ -183,11 +176,45 @@ function App() {
     }
   };
 
+  // --- MODIFICACIÓN: Guardar Puntuación ---
   const handleGameEnd = (score) => {
-// ... (código existente sin cambios)
-    setFinalScore(score);
-    setAppState('trivia-results');
+    setFinalScore(score); // Guardamos el puntaje para la pantalla de resultados
+    setAppState('trivia-results'); // Mostramos la pantalla de resultados inmediatamente
+
+    // Después de mostrar los resultados, intentamos guardar en segundo plano
+    if (user && !user.isAnonymous) {
+      console.log('Juego terminado, guardando puntuación en el backend...');
+      user.getIdToken(true)
+        .then(idToken => {
+          const gameData = {
+            score: score,
+            questionsTotal: currentQuestions.length,
+            gameMode: currentCategory.id ? 'classic' : 'random_api',
+            categoryName: currentCategory.name,
+            difficulty: currentCategory.difficulty
+          };
+
+          return fetch('http://localhost:4000/save-score', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${idToken}`
+            },
+            body: JSON.stringify(gameData)
+          });
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log('Respuesta de /save-score:', data.message);
+        })
+        .catch(error => {
+          console.error('Error al guardar la puntuación:', error);
+          // No mostramos un error al usuario aquí, ya que el juego ya terminó.
+          // Solo lo registramos en la consola.
+        });
+    }
   };
+  // --- FIN DE LA MODIFICACIÓN ---
 
   const handlePlayAgain = () => {
 // ... (código existente sin cambios)

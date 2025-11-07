@@ -5,7 +5,6 @@ import './Leaderboard.css';
 const BACKEND_URL = 'https://glairy-debroah-downwardly.ngrok-free.dev';
 
 const Leaderboard = ({ onBack }) => {
-// ... (estados existentes sin cambios)
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -17,14 +16,12 @@ const Leaderboard = ({ onBack }) => {
       try {
         const response = await fetch(`${BACKEND_URL}/leaderboard`, {
             headers: {
-                // --- ¡CORRECCIÓN NGROK! ---
                 'ngrok-skip-browser-warning': 'true'
             }
         });
         if (!response.ok) {
           throw new Error('No se pudo cargar el leaderboard.');
         }
-// ... (código existente sin cambios)
         const data = await response.json();
         setLeaderboardData(data); 
       } catch (err) {
@@ -35,11 +32,10 @@ const Leaderboard = ({ onBack }) => {
     };
 
     fetchLeaderboard();
-  }, []); 
+  }, []); // El array vacío [] asegura que esto solo se ejecute una vez
 
   return (
     <div className="leaderboard-container">
-// ... (código de renderizado existente sin cambios)
       <div className="leaderboard-box">
         <button onClick={onBack} className="back-button-leaderboard">← Volver al Inicio</button>
         <h1>🏆 Leaderboard Global 🏆</h1>
@@ -66,6 +62,14 @@ const Leaderboard = ({ onBack }) => {
                   <td className="score-cell">{player.total_score.toLocaleString()}</td>
                 </tr>
               ))}
+              {/* Si no hay datos, mostramos un mensaje */}
+              {leaderboardData.length === 0 && (
+                <tr>
+                  <td colSpan="3" style={{ textAlign: 'center', color: '#888' }}>
+                    Aún no hay puntuaciones. ¡Juega una partida para ser el primero!
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         )}

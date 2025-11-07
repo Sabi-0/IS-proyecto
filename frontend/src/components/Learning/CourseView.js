@@ -6,14 +6,15 @@ import { coursesData, lessonsData } from '../../data/learningData';
 const CourseView = ({ courseId, onSelectLesson, onBack }) => {
   // Buscamos el curso y sus lecciones usando el courseId
   const course = coursesData.find(c => c.id === courseId);
-  const lessons = lessonsData[courseId] || []; // Usamos las lecciones del curso o un array vacío
+  // Usamos el estado global (importado) de lessonsData
+  const lessons = lessonsData[courseId] || []; 
 
   // Simulamos progreso (en el futuro vendría del backend)
   const completedLessonsCount = lessons.filter(l => l.completed).length;
   const progress = lessons.length > 0 ? (completedLessonsCount / lessons.length) * 100 : 0;
 
   if (!course) {
-      return <div className="error-bar">Curso no encontrado.</div>;
+      return <div className="error-bar">Curso no encontrado. Vuelve a intentarlo.</div>;
   }
 
   return (

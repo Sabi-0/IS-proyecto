@@ -1,3 +1,4 @@
+// --- Cargar variables de entorno ---
 require('dotenv').config(); 
 
 // --- Importaciones ---
@@ -5,8 +6,8 @@ const express = require('express');
 const cors = require('cors');
 const admin = require('firebase-admin');
 const { Pool } = require('pg');
-const http = require('http'); // Necesario para Socket.io
-const { Server } = require("socket.io"); // Importamos Socket.io
+const http = require('http');
+const { Server } = require("socket.io");
 
 // --- Configuración Inicial ---
 const app = express();
@@ -19,10 +20,8 @@ admin.initializeApp({
 });
 
 // --- Configuración de PostgreSQL (Conectado a Supabase) ---
-// El Pool ahora toma la cadena de conexión directamente desde el archivo .env
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  // Supabase requiere SSL
   ssl: {
     rejectUnauthorized: false
   }
@@ -34,6 +33,7 @@ app.use(express.json());
 
 // Middleware para verificar el token de Firebase
 async function verificarToken(req, res, next) {
+// ... (código existente sin cambios)
   const token = req.headers.authorization?.split('Bearer ')[1];
   if (!token) {
     return res.status(401).send('No autorizado: Token no proporcionado.');
@@ -51,28 +51,35 @@ async function verificarToken(req, res, next) {
 // --- Ruta API para Sincronizar Usuario ---
 app.post('/sync-user', verificarToken, async (req, res) => {
   const firebaseUid = req.user.uid;
+  
+  // --- ¡CORRECCIÓN CLAVE DE ROBUSTEZ! ---
+  // Los usuarios anónimos (invitados) no tienen email.
+  // Verificamos si existe el email antes de continuar.
+  if (!req.user.email) {
+    console.log(`Intento de sincronización de usuario anónimo (UID: ${firebaseUid}). Sincronización omitida.`);
+    // Respondemos con éxito, porque el frontend no necesita hacer nada más.
+    return res.status(200).send({ message: 'Usuario anónimo, no se requiere sincronización.' });
+  }
+  // --- FIN DE LA CORRECCIÓN ---
+
   const email = req.user.email;
-  // Usamos el display_name de Firebase si existe, si no, el email
-  const displayName = req.user.name || req.user.email.split('@')[0];
+  // Usamos el display_name de Firebase si existe, si no, creamos uno a partir del email
+  const displayName = req.user.name || email.split('@')[0]; // Ahora 'email' NUNCA será nulo aquí
 
   console.log(`Intentando sincronizar usuario: ${firebaseUid}`);
 
   try {
-    // 1. Revisamos si el usuario ya existe en nuestra BD
     const userCheck = await pool.query('SELECT * FROM users WHERE firebase_uid = $1', [firebaseUid]);
 
     if (userCheck.rows.length === 0) {
-      // 2. Si no existe, lo creamos
       console.log(`Usuario ${firebaseUid} no encontrado, creando...`);
       await pool.query(
         'INSERT INTO users (firebase_uid, email, display_name, created_at) VALUES ($1, $2, $3, NOW())',
         [firebaseUid, email, displayName]
       );
       console.log(`Usuario ${firebaseUid} creado exitosamente.`);
-      // El disparador (trigger) en Supabase creará automáticamente la fila en user_stats
       res.status(201).send({ message: 'Usuario creado y sincronizado.' });
     } else {
-      // 3. Si ya existe, solo respondemos OK
       console.log(`Usuario ${firebaseUid} ya existe.`);
       res.status(200).send({ message: 'Usuario ya sincronizado.' });
     }
@@ -87,16 +94,16 @@ app.post('/sync-user', verificarToken, async (req, res) => {
 
 // --- Configuración del Servidor HTTP y Socket.io ---
 const server = http.createServer(app); 
+// ... (código existente de Socket.io sin cambios)
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000", // Permite la conexión desde tu frontend de React
+    origin: "http://localhost:3000",
     methods: ["GET", "POST"]
   }
 });
 
-let connectedUsers = []; // Lista simple para mantener a los usuarios conectados
+let connectedUsers = []; 
 
-// Lógica de Socket.io
 io.on('connection', (socket) => {
   console.log('Un usuario se ha conectado:', socket.id);
 
@@ -118,5 +125,6 @@ io.on('connection', (socket) => {
 
 // --- Iniciar el Servidor ---
 server.listen(port, () => {
+// ... (código existente sin cambios)
   console.log(`Servidor API y WebSocket corriendo en http://localhost:${port}`);
 });

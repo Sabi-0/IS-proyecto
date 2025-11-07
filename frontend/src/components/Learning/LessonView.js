@@ -13,6 +13,7 @@ const fetchLessonContent = async (courseId, lessonId) => {
   const content = lessonContentData[lessonId]; // Buscamos el contenido por ID de lección
   
   if (!content) {
+      console.error(`Contenido no encontrado para la lección ${lessonId}`);
       throw new Error(`Contenido no encontrado para la lección ${lessonId}`);
   }
 
@@ -20,10 +21,7 @@ const fetchLessonContent = async (courseId, lessonId) => {
   return {
     title: content.title || "Título no encontrado",
     explanation: content.explanation || "Explicación no disponible.",
-    quizQuestions: content.quizQuestions || [ // Preguntas por defecto si no hay
-        { question: 'Pregunta de ejemplo 1?', options: ['A', 'B', 'C', 'D'], answer: 'A' },
-        { question: 'Pregunta de ejemplo 2?', options: ['A', 'B', 'C', 'D'], answer: 'B' },
-    ]
+    quizQuestions: content.quizQuestions || [] // Devolver array vacío si no hay quiz
   };
 };
 
@@ -44,23 +42,24 @@ const LessonView = ({ courseId, lessonId, onCompleteLesson, onBack }) => {
       .catch(error => {
         console.error("Error fetching lesson content:", error);
         setIsLoading(false);
-        // Podríamos mostrar un mensaje de error aquí
       });
   }, [courseId, lessonId]); // Recargar si cambia la lección
 
   const handleQuizSubmit = (score) => {
       console.log(`Quiz completado con ${score} aciertos de ${lessonContent.quizQuestions.length}.`);
       // Pasar si acierta al menos el 60%
-      if (score >= Math.floor(lessonContent.quizQuestions.length * 0.6)) { 
+      const passingScore = Math.floor(lessonContent.quizQuestions.length * 0.6);
+      if (score >= passingScore) {
+        console.log("¡Lección aprobada!");
         onCompleteLesson(courseId, lessonId); 
       } else {
-          alert("Puntuación insuficiente. Repasa la lección e inténtalo de nuevo.");
+          alert(`Puntuación insuficiente. Necesitas al menos ${passingScore} aciertos. ¡Repasa la lección e inténtalo de nuevo!`);
           setShowQuiz(false); // Volver a la lección
       }
   };
 
   if (isLoading) return <div className="loading-screen">Cargando lección...</div>;
-  if (!lessonContent) return <div className="error-bar">Error al cargar el contenido.</div>;
+  if (!lessonContent) return <div className="error-bar">Error al cargar el contenido de esta lección.</div>;
 
   if (showQuiz) {
       const quizQuestionsFormatted = lessonContent.quizQuestions.map(q => ({
@@ -69,8 +68,6 @@ const LessonView = ({ courseId, lessonId, onCompleteLesson, onBack }) => {
           incorrect_answers: q.options.filter(opt => opt !== q.answer) 
       }));
 
-      // --- CORRECCIÓN: Asegurarse que TriviaGame recibe las props que necesita ---
-      // TriviaGame espera 'categoryName', le pasamos el título del quiz
       return (
           <div className="lesson-view-container quiz-mode">
               <TriviaGame
@@ -91,9 +88,13 @@ const LessonView = ({ courseId, lessonId, onCompleteLesson, onBack }) => {
           <p>{lessonContent.explanation}</p>
         </div>
         {/* Mostramos el botón solo si hay preguntas definidas */}
-        {lessonContent.quizQuestions && lessonContent.quizQuestions.length > 0 && (
+        {lessonContent.quizQuestions && lessonContent.quizQuestions.length > 0 ? (
             <button onClick={() => setShowQuiz(true)} className="start-quiz-button">
             Iniciar Mini-Quiz
+            </button>
+        ) : (
+            <button onClick={() => onCompleteLesson(courseId, lessonId)} className="start-quiz-button">
+            Marcar como completada
             </button>
         )}
       </div>

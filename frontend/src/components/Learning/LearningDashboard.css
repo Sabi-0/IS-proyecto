@@ -1,76 +1,134 @@
+/* src/LearningDashboard.css */
+
+/* Variables de color semánticas (para legibilidad) */
+:root {
+  --color-accent: rgba(138, 43, 226, 0.9);
+  --color-easy: #66BB6A;
+  --color-medium: #FFA726;
+  --color-hard: #E53935;
+}
+
+/* Contenedor principal */
 .learning-dashboard-container {
   display: flex;
   justify-content: center;
   align-items: flex-start; /* Alinear arriba */
   min-height: 100vh;
-  background-color: #f5f7fa;
-  padding: 40px 20px;
+  padding: 0;
+  box-sizing: border-box;
 }
 
+/*
+  Caja del Dashboard:
+  - Es el layout de página completa
+  - Transparente, con padding interno
+*/
 .learning-dashboard-box {
-  background-color: white;
-  padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  background: transparent;
+  box-shadow: none;
+  
   width: 100%;
-  max-width: 900px;
+  max-width: 1200px;
+  padding: 3rem;
+  
   text-align: center;
   position: relative;
 }
 
 .learning-dashboard-box h1 {
   font-size: 2.5rem;
-  color: #1E88E5;
+  color: var(--color-accent); /* Acento púrpura */
   margin-bottom: 10px;
 }
 
 .learning-dashboard-box p {
   font-size: 1.2rem;
-  color: #6c757d;
+  color: var(--text-color);
+  opacity: 0.7;
   margin-bottom: 40px;
 }
 
+/* Grid de Cursos */
 .course-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 25px;
 }
 
+/*
+  Tarjeta de Curso:
+  - Aplicamos el estilo de "botón interactivo"
+*/
 .course-card {
-  background-color: #ffffff;
+  position: relative;
+  overflow: hidden; /* Esto ya estaba, ¡perfecto! */
+  z-index: 1;
+  
+  background: var(--card-background);
+  border: 1px solid var(--card-border);
+  border-radius: 15px;
+  
   padding: 25px;
-  border-radius: 10px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
   text-align: left;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  position: relative;
-  border-left: 5px solid #1E88E5;
-  overflow: hidden; /* Para el badge */
+  
+  transition: transform 0.2s ease;
+  
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .course-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
 }
 
+/* Brillo ::before */
+.course-card::before {
+  content: "";
+  position: absolute;
+  z-index: -2;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 150%; height: 150%;
+  background: conic-gradient(
+    from 180deg,
+    transparent 70%,
+    var(--color-accent) 85%,
+    transparent 100%
+  );
+  animation: rotate 4s linear infinite;
+}
+
+/* Máscara ::after */
+.course-card::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 2px; left: 2px; right: 2px; bottom: 2px;
+  background: var(--card-background);
+  border-radius: 13px; /* 15px - 2px */
+}
+
+/* Contenido de la tarjeta */
 .course-card h3 {
   margin: 10px 0 10px;
   font-size: 1.4rem;
-  color: #333;
+  color: var(--text-color);
 }
 
 .course-card p {
   font-size: 1rem;
-  color: #6c757d;
+  color: var(--text-color);
+  opacity: 0.7;
   margin-bottom: 0;
 }
 
+/* Badge de Nivel */
 .level-badge {
   position: absolute;
   top: 15px;
-  right: -30px; /* Escondido inicialmente */
-  background-color: #FFA726; /* Naranja por defecto */
+  right: -30px;
+  background-color: var(--color-medium); /* Naranja por defecto */
   color: white;
   padding: 5px 30px;
   font-size: 0.8rem;
@@ -78,31 +136,43 @@
   transform: rotate(45deg);
   transform-origin: top right;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  z-index: 2; /* Asegura que esté sobre el contenido */
 }
 
 .level-badge.level-básico {
-  background-color: #66BB6A; /* Verde */
+  background-color: var(--color-easy); /* Verde */
 }
 .level-badge.level-intermedio {
-  background-color: #FFA726; /* Naranja */
+  background-color: var(--color-medium); /* Naranja */
 }
 .level-badge.level-avanzado {
-  background-color: #E53935; /* Rojo */
+  background-color: var(--color-hard); /* Rojo */
 }
 
-
+/* Botón de Volver */
 .back-button-learning {
   position: absolute;
-  top: 25px;
-  left: 25px;
+  top: 3rem; /* Alineado al padding */
+  left: 3rem; /* Alineado al padding */
+  
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: 1rem; /* Estandarizado */
+  font-weight: bold;
   cursor: pointer;
-  color: #aaa;
-  transition: color 0.2s;
+  
+  color: var(--text-color);
+  opacity: 0.6;
+  transition: opacity 0.2s;
 }
 
 .back-button-learning:hover {
-  color: #333;
+  opacity: 1;
+}
+
+/* Animación de rotación (usada por .course-card) */
+@keyframes rotate {
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
 }

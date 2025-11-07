@@ -1,45 +1,67 @@
+/* src/CourseView.css */
+
+/* Variables de color semánticas (para legibilidad) */
+:root {
+  --color-accent: rgba(138, 43, 226, 0.9);
+  --color-easy: #66BB6A; /* Verde para 'completado' */
+}
+
+/*
+  Contenedor principal:
+  - 'flex-start' alinea el contenido arriba, lo cual es bueno para un curso.
+  - El fondo lo da el 'body'.
+*/
 .course-view-container {
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: flex-start; /* Mantenemos el original */
   min-height: 100vh;
-  background-color: #f5f7fa;
-  padding: 40px 20px;
+  padding: 0; /* El padding lo maneja el 'box' */
+  box-sizing: border-box;
 }
 
+/*
+  Caja del Curso:
+  - Es el layout de página completa (como en CategorySelection)
+  - Transparente, con padding interno
+*/
 .course-view-box {
-  background-color: white;
-  padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  
   width: 100%;
-  max-width: 800px;
+  max-width: 1200px;
+  padding: 3rem;
   position: relative;
 }
 
+/* Header del Curso */
 .course-header {
   text-align: center;
-  margin-bottom: 40px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 30px;
+  margin-bottom: 2.5rem;
+  border-bottom: 1px solid var(--card-border);
+  padding-bottom: 2.5rem;
 }
 
 .course-header h2 {
   font-size: 2.5rem;
-  color: #1E88E5;
+  color: var(--color-accent); /* Acento púrpura */
   margin-bottom: 10px;
 }
 
 .course-header p {
   font-size: 1.2rem;
-  color: #6c757d;
+  color: var(--text-color);
+  opacity: 0.7;
   margin-bottom: 20px;
 }
 
+/* Barra de Progreso */
 .progress-bar-container {
   width: 100%;
   height: 10px;
-  background-color: #e0e0e0;
+  background-color: var(--card-border); /* Fondo de barra del tema */
   border-radius: 5px;
   overflow: hidden;
   margin-bottom: 5px;
@@ -47,86 +69,152 @@
 
 .progress-bar {
   height: 100%;
-  background-color: #4CAF50; /* Verde */
+  background-color: var(--color-easy); /* Verde */
   transition: width 0.5s ease-in-out;
 }
 
 .progress-text {
-    font-size: 0.9rem;
-    color: #555;
-    font-weight: bold;
+  font-size: 0.9rem;
+  color: var(--text-color);
+  opacity: 0.8;
+  font-weight: bold;
 }
 
-
+/* Título de la sección (ej. "Lecciones") */
 .course-view-box h3 {
   text-align: center;
   font-size: 1.8rem;
-  color: #333;
-  margin-bottom: 25px;
+  color: var(--text-color);
+  margin-top: 3rem; /* Espacio después de la barra de progreso */
+  margin-bottom: 2rem;
 }
 
 .lesson-list {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem; /* Espacio entre lecciones */
 }
 
+/*
+  Lección (Base = Bloqueada):
+  - Estilo Glassmorphism tenue
+*/
 .lesson-item {
   display: flex;
   align-items: center;
-  padding: 18px 20px;
-  margin-bottom: 10px;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  background-color: #f9f9f9;
-  cursor: not-allowed; /* Por defecto no son clickables */
+  padding: 1.5rem;
+  border-radius: 15px;
+  cursor: not-allowed;
   opacity: 0.6;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  
+  /* Estilos Glassmorphism */
+  background: var(--card-background);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
+/* Lección Completada */
 .lesson-item.completed {
   opacity: 1;
-  background-color: #e8f5e9; /* Verde claro */
-  border-left: 5px solid #4CAF50;
-  cursor: default; /* Completadas no son clickables */
+  /* Tinte y borde verde */
+  background: rgba(102, 187, 106, 0.1);
+  border-color: var(--color-easy);
+  cursor: default;
 }
 
+/*
+  Lección Activa (Siguiente):
+  - ¡Esta es la importante!
+  - Tiene el efecto de borde brillante.
+*/
 .lesson-item.next-lesson {
   opacity: 1;
-  cursor: pointer; /* La siguiente lección sí es clickable */
-  background-color: #fff;
-  border-left: 5px solid #1E88E5;
+  cursor: pointer;
+  position: relative; /* Requerido para el efecto */
+  overflow: hidden; /* Requerido para el efecto */
+  z-index: 1;
 }
 
 .lesson-item.next-lesson:hover {
-    background-color: #f0f8ff; /* Azul muy claro al pasar el mouse */
+  transform: translateY(-5px); /* Un hover más sutil que los botones grandes */
 }
 
+/* Brillo ::before (Solo para .next-lesson) */
+.lesson-item.next-lesson::before {
+  content: "";
+  position: absolute;
+  z-index: -2;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 150%;
+  height: 150%;
+  background: conic-gradient(
+    from 180deg,
+    transparent 70%,
+    var(--color-accent) 85%,
+    transparent 100%
+  );
+  animation: rotate 4s linear infinite;
+}
 
+/* Máscara ::after (Solo para .next-lesson) */
+.lesson-item.next-lesson::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  background: var(--card-background);
+  border-radius: 13px; /* 15px (padre) - 2px (borde) */
+}
+
+/* Icono (check, lock, etc.) */
 .lesson-status-icon {
   margin-right: 15px;
   font-size: 1.3rem;
+  /* El color lo hereda del .lesson-item (verde, púrpura, etc.) */
 }
 
+/* Título de la lección */
 .lesson-title {
   font-size: 1.1rem;
   font-weight: 500;
-  color: #333;
+  color: var(--text-color);
 }
 
+/*
+  Botón de Volver:
+  - Alineado con el padding de 3rem
+*/
 .back-button-course {
   position: absolute;
-  top: 25px;
-  left: 25px;
+  top: 3rem;
+  left: 3rem;
   background: none;
   border: none;
   font-size: 1rem;
   font-weight: bold;
   cursor: pointer;
-  color: #aaa;
-  transition: color 0.2s;
+  color: var(--text-color);
+  opacity: 0.6;
+  transition: opacity 0.2s;
 }
 
 .back-button-course:hover {
-  color: #333;
+  opacity: 1;
+}
+
+/* Animación de rotación (usada por .next-lesson) */
+@keyframes rotate {
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
 }

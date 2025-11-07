@@ -1,104 +1,202 @@
+/* src/CategorySelection.css */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+
+/* Contenedor principal:
+  - Sigue centrando el contenido vertical y horizontalmente.
+  - Le quitamos el padding para que el hijo pueda crecer.
+*/
 .category-selection-container {
+  width: 100%;
+  min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
-  background-color: #f5f7fa;
-  padding: 20px;
+  padding: 0; /* <-- CAMBIO: De 2rem a 0 */
+  box-sizing: border-box;
 }
 
+/*
+  Caja de selección:
+  - ¡YA NO ES UNA TARJETA!
+  - Le quitamos todos los estilos de tarjeta (fondo, borde, sombra, blur).
+  - Ahora es un contenedor "invisible" que organiza el contenido.
+  - Tiene un max-width de 1200px (para ser adaptativo) y padding interno.
+*/
 .category-selection-box {
-  background-color: white;
-  padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  /* --- ESTILOS DE TARJETA ELIMINADOS --- */
+  background: transparent; /* <-- CAMBIO */
+  border: none; /* <-- CAMBIO */
+  backdrop-filter: none; /* <-- CAMBIO */
+  border-radius: 0; /* <-- CAMBIO */
+  box-shadow: none; /* <-- CAMBIO */
+  
+  /* --- NUEVOS ESTILOS DE LAYOUT --- */
   width: 100%;
-  max-width: 800px;
+  max-width: 1200px; /* <-- ADAPTATIVO: Ocupa todo en cel, max 1200px en PC */
+  padding: 3rem; /* Padding *interno* para que el contenido no pegue a los bordes */
+
+  /* --- Estilos que se quedan --- */
   text-align: center;
   position: relative;
 }
 
+/* Título (Elige Categoría / Dificultad) */
 .category-selection-box h2 {
-  font-size: 2.5rem;
-  color: #1E88E5;
-  margin-bottom: 30px;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--text-color);
+  margin-top: 1rem;
+  margin-bottom: 2.5rem;
 }
 
-.category-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-}
-
-.category-button {
-  padding: 25px;
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: white;
-  background: linear-gradient(135deg, #1E88E5, #42A5F5);
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.category-button:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-}
-
-/* --- ESTILOS PARA LA DIFICULTAD --- */
-.difficulty-grid {
-  display: flex; /* Cambiamos a flex para ponerlos en fila */
-  justify-content: center;
-  gap: 20px;
-  margin-top: 30px;
-}
-
-.difficulty-button {
-  padding: 20px 40px;
-  font-size: 1.3rem;
-  font-weight: bold;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.difficulty-button:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-}
-
-/* Colores específicos para cada dificultad */
-.difficulty-easy {
-  background: linear-gradient(135deg, #66BB6A, #81C784); /* Verde */
-}
-.difficulty-medium {
-  background: linear-gradient(135deg, #FFA726, #FFB74D); /* Naranja */
-}
-.difficulty-hard {
-  background: linear-gradient(135deg, #E53935, #EF5350); /* Rojo */
-}
-/* --- FIN ESTILOS DIFICULTAD --- */
-
-
+/*
+  Botón de Volver:
+  - Ahora se alinea con el padding de 3rem del nuevo layout.
+*/
 .back-button {
   position: absolute;
-  top: 25px;
-  left: 25px;
+  top: 3rem; /* <-- CAMBIO */
+  left: 3rem; /* <-- CAMBIO */
   background: none;
   border: none;
-  font-size: 1rem; /* Ajustado */
-  font-weight: bold;
+  font-size: 1rem;
+  font-weight: 700;
   cursor: pointer;
-  color: #aaa;
-  transition: color 0.2s;
+  color: var(--text-color);
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
 }
 
 .back-button:hover {
-  color: #333;
+  opacity: 1;
+}
+
+/* Grid de Categorías (Sin cambios) */
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Botón de Categoría (Sin cambios) */
+.category-button {
+  position: relative;
+  overflow: hidden;
+  background: var(--card-background);
+  border: 1px solid var(--card-border);
+  border-radius: 15px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  text-align: center;
+  z-index: 1;
+
+  font-family: 'Inter', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+/* Efecto de brillo ::before (Sin cambios) */
+.category-button::before {
+  content: "";
+  position: absolute;
+  z-index: -2;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 150%;
+  height: 150%;
+  background: conic-gradient(
+    from 180deg,
+    transparent 70%,
+    rgba(138, 43, 226, 0.6) 85%, /* Color púrpura del Home */
+    transparent 100%
+  );
+  animation: rotate 4s linear infinite;
+}
+
+/* Máscara ::after (Sin cambios) */
+.category-button::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  background: var(--card-background);
+  border-radius: 13px;
+}
+
+/* Animación de rotación (Sin cambios) */
+@keyframes rotate {
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+.category-button:hover {
+  transform: translateY(-10px);
+}
+
+/* --- ESTILOS PARA LA DIFICULTAD (Sin cambios) --- */
+
+.difficulty-grid {
+  display: flex;
+  flex-wrap: wrap; 
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.difficulty-button {
+  --color-easy: #66BB6A;
+  --color-medium: #FFA726;
+  --color-hard: #E53935;
+
+  padding: 1rem 2.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border-radius: 50px; 
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  background-color: transparent;
+  border: 2px solid;
+}
+
+.difficulty-easy {
+  border-color: var(--color-easy);
+  color: var(--color-easy);
+}
+.difficulty-medium {
+  border-color: var(--color-medium);
+  color: var(--color-medium);
+}
+.difficulty-hard {
+  border-color: var(--color-hard);
+  color: var(--color-hard);
+}
+
+.difficulty-easy:hover {
+  background-color: var(--color-easy);
+  color: var(--primary-button-text);
+  transform: scale(1.05);
+  box-shadow: 0 5px 20px rgba(102, 187, 106, 0.3);
+}
+.difficulty-medium:hover {
+  background-color: var(--color-medium);
+  color: var(--primary-button-text);
+  transform: scale(1.05);
+  box-shadow: 0 5px 20px rgba(255, 167, 38, 0.3);
+}
+.difficulty-hard:hover {
+  background-color: var(--color-hard);
+  color: var(--primary-button-text);
+  transform: scale(1.05);
+  box-shadow: 0 5px 20px rgba(229, 57, 53, 0.3);
 }

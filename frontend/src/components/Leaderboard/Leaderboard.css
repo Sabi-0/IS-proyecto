@@ -1,60 +1,100 @@
+/* src/Leaderboard.css */
+
+/* Variables de color semánticas (para legibilidad) */
+:root {
+  --color-accent: rgba(138, 43, 226, 0.9);
+  --color-gold: #FFC107;
+}
+
+/* Contenedor principal */
 .leaderboard-container {
   display: flex;
   justify-content: center;
   align-items: flex-start; /* Alinear arriba */
   min-height: 100vh;
-  background-color: #f5f7fa;
-  padding: 40px 20px;
+  padding: 0;
+  box-sizing: border-box;
 }
 
+/*
+  Caja del Leaderboard:
+  - Es el layout de página completa
+  - Transparente, con padding interno
+*/
 .leaderboard-box {
-  background-color: white;
-  padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  background: transparent;
+  box-shadow: none;
+  
   width: 100%;
-  max-width: 800px;
+  max-width: 1200px; /* Consistencia */
+  padding: 3rem;
+  
   text-align: center;
   position: relative;
 }
 
 .leaderboard-box h1 {
   font-size: 2.5rem;
-  color: #1E88E5;
+  color: var(--color-accent); /* Acento púrpura */
   margin-bottom: 10px;
 }
 
 .leaderboard-box p {
   font-size: 1.2rem;
-  color: #6c757d;
+  color: var(--text-color);
+  opacity: 0.7;
   margin-bottom: 30px;
 }
 
+/*
+  Tabla Leaderboard:
+  - La convertimos en una tarjeta "glass"
+*/
 .leaderboard-table {
   width: 100%;
   border-collapse: collapse;
+  
+  /* Estilos Glassmorphism */
+  border: 1px solid var(--card-border);
+  border-radius: 15px;
+  overflow: hidden; /* Clave para los border-radius */
 }
 
+/* Encabezado de la Tabla */
 .leaderboard-table th {
-  background-color: #1E88E5;
-  color: white;
+  background-color: var(--card-background);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  
+  color: var(--text-color);
   padding: 15px;
   font-size: 1.1rem;
 }
 
+/* Cuerpo de la Tabla */
 .leaderboard-table td {
   padding: 15px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--card-border);
+  color: var(--text-color);
+  transition: background-color 0.2s ease;
 }
 
+/* Quitamos el fondo de rayas, no se verá bien */
 .leaderboard-table tbody tr:nth-child(even) {
-  background-color: #f9f9f9;
+  background-color: transparent;
 }
 
+/* Nuevo hover para modo oscuro */
 .leaderboard-table tbody tr:hover {
-  background-color: #f0f8ff; /* Azul claro al pasar el mouse */
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
+/* Quitamos el borde de la última fila */
+.leaderboard-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Celdas especiales */
 .position-cell {
   font-weight: bold;
   font-size: 1.2rem;
@@ -66,25 +106,31 @@
 
 .score-cell {
   font-weight: bold;
-  color: #1E88E5;
+  color: var(--color-accent); /* Acento púrpura */
 }
 
+/* El dorado para el #1 se ve bien, lo mantenemos */
 .top-player .position-cell {
-  color: #FFC107; /* Dorado */
+  color: var(--color-gold);
 }
 
+/* Botón de Volver */
 .back-button-leaderboard {
   position: absolute;
-  top: 25px;
-  left: 25px;
+  top: 3rem;
+  left: 3rem;
+  
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: 1rem; /* Estandarizado */
+  font-weight: bold;
   cursor: pointer;
-  color: #aaa;
-  transition: color 0.2s;
+  
+  color: var(--text-color);
+  opacity: 0.6;
+  transition: opacity 0.2s;
 }
 
 .back-button-leaderboard:hover {
-  color: #333;
+  opacity: 1;
 }

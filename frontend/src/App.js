@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 
 // Imports de componentes
-// ... (todos tus imports de componentes)
-import AuthPage from './components/Authpage/AuthPage';
+// ... (todos tus imports de componentes se mantienen igual)
+import AuthPage from './components/AuthPage/AuthPage.js';
 import LandingPage from './components/LandingPage/LandingPage';
 import HomePage from './components/HomePage/HomePage';
 import CategorySelection from './components/Trivia/CategorySelection';

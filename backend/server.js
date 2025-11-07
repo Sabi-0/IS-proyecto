@@ -4,7 +4,6 @@ require('dotenv').config();
 // --- Importaciones ---
 // ... (imports existentes: express, cors, admin, pg, http, Server)
 const express = require('express');
-// ... (el resto de tus imports)
 const cors = require('cors');
 const admin = require('firebase-admin');
 const { Pool } = require('pg');
@@ -41,7 +40,6 @@ app.use(express.json());
 async function verificarToken(req, res, next) {
 // ... (código existente de verificarToken)
   const token = req.headers.authorization?.split('Bearer ')[1];
-// ... (el resto del middleware)
   if (!token) {
     return res.status(401).send('No autorizado: Token no proporcionado.');
   }
@@ -59,7 +57,6 @@ async function verificarToken(req, res, next) {
 app.post('/sync-user', verificarToken, async (req, res) => {
 // ... (código existente de /sync-user)
   const firebaseUid = req.user.uid;
-// ... (el resto del código de sync-user)
   
   if (!req.user.email) {
     console.log(`Intento de sincronización de usuario anónimo (UID: ${firebaseUid}). Sincronización omitida.`);
@@ -97,7 +94,6 @@ app.post('/sync-user', verificarToken, async (req, res) => {
 app.post('/save-score', verificarToken, async (req, res) => {
   const user_uid = req.user.uid;
   
-  // --- ¡CORRECCIÓN CLAVE! ---
   // Ahora recibimos 'correctAnswers' e 'incorrectAnswers'
   const { score, questionsTotal, gameMode, categoryName, difficulty, correctAnswers, incorrectAnswers } = req.body;
 
@@ -280,6 +276,5 @@ io.on('connection', (socket) => {
 
 // --- Iniciar el Servidor ---
 server.listen(port, () => {
-// ... (código existente sin cambios)
   console.log(`Servidor API y WebSocket corriendo en http://localhost:${port}`);
 });

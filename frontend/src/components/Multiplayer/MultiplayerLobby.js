@@ -1,57 +1,67 @@
 import React, { useState, useEffect, useRef } from 'react';
-import io from 'socket.io-client'; // Cliente de Socket.io
+import io from 'socket.io-client'; 
 import './MultiplayerLobby.css';
 
-// URL de tu servidor backend
-const SOCKET_SERVER_URL = "http://localhost:4000";
+// --- ¡URL DEL BACKEND PARA DESPLIEGUE! ---
+// ¡YA ESTÁ ACTUALIZADA CON TU URL DE NGROK!
+const SOCKET_SERVER_URL = "https://glairy-debroah-downwardly.ngrok-free.dev";
+// ---
 
 const MultiplayerLobby = ({ user, onBack }) => {
+// ... (estados existentes sin cambios)
   const [isConnected, setIsConnected] = useState(false);
   const [lobbyUsers, setLobbyUsers] = useState([]);
   const [welcomeMsg, setWelcomeMsg] = useState('');
-  const socketRef = useRef(null); // Usamos useRef para mantener la instancia del socket
+  const socketRef = useRef(null); 
 
   useEffect(() => {
-    // Conectar al servidor de Socket.io cuando el componente se monta
-    socketRef.current = io(SOCKET_SERVER_URL);
+    // --- ¡CORRECCIÓN NGROK! ---
+    // Añadimos la cabecera especial en la conexión del socket
+    socketRef.current = io(SOCKET_SERVER_URL, {
+      extraHeaders: {
+        'ngrok-skip-browser-warning': 'true'
+      }
+    });
     const socket = socketRef.current;
 
-    // --- Manejadores de Eventos del Socket ---
     socket.on('connect', () => {
+// ... (código existente sin cambios)
       console.log('Conectado al servidor WebSocket!');
       setIsConnected(true);
-      // Una vez conectado, enviamos nuestros datos para unirnos al lobby
       socket.emit('joinLobby', { 
         displayName: user?.displayName || user?.email?.split('@')[0] || 'Invitado' 
       });
     });
 
     socket.on('disconnect', () => {
+// ... (código existente sin cambios)
       console.log('Desconectado del servidor WebSocket.');
       setIsConnected(false);
-      setLobbyUsers([]); // Limpiar lista al desconectar
+      setLobbyUsers([]); 
       setWelcomeMsg('');
     });
 
     socket.on('updateUserList', (users) => {
+// ... (código existente sin cambios)
       console.log('Lista de usuarios actualizada:', users);
       setLobbyUsers(users);
     });
     
     socket.on('welcomeMessage', (msg) => {
+// ... (código existente sin cambios)
         setWelcomeMsg(msg);
     });
 
-    // --- Limpieza al Desmontar ---
-    // Asegurarse de desconectar el socket cuando el componente se destruye
     return () => {
+// ... (código existente sin cambios)
       console.log('Desconectando socket...');
       socket.disconnect();
     };
-  }, [user]); // Dependemos de 'user' por si cambia la info
+  }, [user]); 
 
   return (
     <div className="multiplayer-lobby-container">
+{/* ... (código de renderizado existente sin cambios) */}
       <div className="multiplayer-lobby-box">
         <button onClick={onBack} className="back-button-lobby-mp">← Volver al Inicio</button>
         <h2>Lobby Multijugador</h2>
@@ -76,7 +86,6 @@ const MultiplayerLobby = ({ user, onBack }) => {
             <p className="empty-lobby-text">Esperando jugadores...</p>
           )}
 
-          {/* Aquí iría un botón para iniciar el juego cuando haya suficientes jugadores */}
           {lobbyUsers.length >= 2 && isConnected && (
              <button className="start-game-button-placeholder" disabled>
                Iniciar Partida (Próximamente)

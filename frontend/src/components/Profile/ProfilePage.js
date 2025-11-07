@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { auth } from '../../firebaseConfig.js'; // Importamos auth para obtener el token
+import { auth } from '../../firebaseConfig.js'; 
 import './ProfilePage.css';
 
+// ¡URL DEL BACKEND PARA DESPLIEGUE!
+const BACKEND_URL = 'https://glairy-debroah-downwardly.ngrok-free.dev';
+
 const AVATARS = [
+// ... (avatares existentes sin cambios)
   '/avatars/leon.png',     
   '/avatars/pinguino.png', 
   '/avatars/rana.png',      
@@ -10,36 +14,40 @@ const AVATARS = [
 ];
 
 const ProfilePage = ({ user, onBack }) => {
+// ... (estados existentes sin cambios)
   const [profileData, setProfileData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedAvatar, setSelectedAvatar] = useState(null);
   const [message, setMessage] = useState('');
 
-  // Efecto para cargar los datos del perfil desde el backend
   useEffect(() => {
     const fetchProfile = async () => {
-      if (!user) return; // No hacer nada si el usuario no está cargado
+      if (!user) return; 
 
       setIsLoading(true);
       setError(null);
 
       try {
         const token = await user.getIdToken(true);
-        const response = await fetch('http://localhost:4000/profile', {
+        const response = await fetch(`${BACKEND_URL}/profile`, {
           headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${token}`,
+            // --- ¡CORRECCIÓN NGROK! ---
+            'ngrok-skip-browser-warning': 'true'
           }
         });
 
         if (!response.ok) {
+// ... (código existente sin cambios)
           throw new Error('No se pudieron cargar los datos del perfil.');
         }
         
         const data = await response.json();
         setProfileData(data);
-        setSelectedAvatar(data.avatar_url); // Establecer el avatar actual
+        setSelectedAvatar(data.avatar_url); 
       } catch (err) {
+// ... (código existente sin cambios)
         setError(err.message);
         console.error("Error al cargar perfil:", err);
       }
@@ -47,10 +55,10 @@ const ProfilePage = ({ user, onBack }) => {
     };
 
     fetchProfile();
-  }, [user]); // Se ejecuta cada vez que el objeto 'user' cambie
+  }, [user]); 
 
-  // Manejador para guardar el avatar seleccionado
   const handleSaveAvatar = async () => {
+// ... (código existente sin cambios)
     if (!selectedAvatar || selectedAvatar === profileData.avatar_url) {
       setMessage('No hay cambios que guardar.');
       return;
@@ -61,22 +69,25 @@ const ProfilePage = ({ user, onBack }) => {
 
     try {
       const token = await user.getIdToken(true);
-      const response = await fetch('http://localhost:4000/profile/avatar', {
+      const response = await fetch(`${BACKEND_URL}/profile/avatar`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          // --- ¡CORRECCIÓN NGROK! ---
+          'ngrok-skip-browser-warning': 'true'
         },
         body: JSON.stringify({ avatarUrl: selectedAvatar })
       });
 
       if (!response.ok) {
+// ... (código existente sin cambios)
         throw new Error('No se pudo guardar el avatar.');
       }
       
       const data = await response.json();
-      // Actualizamos los datos locales para reflejar el cambio
       setProfileData(prev => ({ ...prev, avatar_url: data.avatarUrl }));
+// ... (código existente sin cambios)
       setMessage('¡Avatar guardado exitosamente!');
     } catch (err) {
       setError(err.message);
@@ -85,6 +96,7 @@ const ProfilePage = ({ user, onBack }) => {
   };
 
   if (isLoading) {
+// ... (código de renderizado existente sin cambios)
     return <div className="loading-screen">Cargando perfil...</div>;
   }
 
@@ -96,12 +108,12 @@ const ProfilePage = ({ user, onBack }) => {
     return <div className="loading-screen">No se encontraron datos del perfil.</div>;
   }
 
-  // Calculamos algunas estadísticas
   const totalAnswers = (profileData.correct_answers || 0) + (profileData.incorrect_answers || 0);
   const accuracy = totalAnswers === 0 ? 0 : Math.round((profileData.correct_answers / totalAnswers) * 100);
 
   return (
     <div className="profile-page-container">
+{/* ... (código de renderizado existente sin cambios) */}
       <div className="profile-box">
         <button onClick={onBack} className="back-button-profile">← Volver al Inicio</button>
         

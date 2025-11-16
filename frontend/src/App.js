@@ -12,6 +12,7 @@ import TournamentLobby from './components/Tournament/TournamentLobby';
 import MultiplayerLobby from './components/Multiplayer/MultiplayerLobby';
 import LearningDashboard from './components/Learning/LearningDashboard';
 import CourseView from './components/Learning/CourseView';
+import TournamentGame from './components/Multiplayer/TournamentGame';
 import LessonView from './components/Learning/LessonView';
 import ProfilePage from './components/Profile/ProfilePage'; 
 
@@ -308,7 +309,8 @@ function App() {
         return <LandingPage onNavigateToAuth={() => setAppState('auth')} />;
       case 'auth':
         return <AuthPage onBack={() => setAppState('landing')} />;
-      
+      case 'tournament-game':
+        return <TournamentGame user={user} onNavigate={handleNavigation} />;
       case 'category-selection':
         return <CategorySelection onSelectCategoryAndDifficulty={fetchTrivia} onBack={() => setAppState('homepage')} />;
       case 'loading-trivia':

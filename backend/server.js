@@ -38,7 +38,6 @@ app.use(express.json());
 
 // Middleware para verificar el token de Firebase
 async function verificarToken(req, res, next) {
-// ... (código existente de verificarToken)
   const token = req.headers.authorization?.split('Bearer ')[1];
   if (!token) {
     return res.status(401).send('No autorizado: Token no proporcionado.');
@@ -290,27 +289,146 @@ const io = new Server(server, {
 });
 
 
-let connectedUsers = []; 
+let connectedUsers = []; let gameState = {
+  status: 'lobby', 
+  currentRound: 0,
+  totalRounds: 3,  // Configurado a 3 Rondas
+  questions: [],   
+  playerScores: {}, 
+  answersInRound: 0
+};
+
+// Función para limpiar texto de la API
+const decodeHTMLEntities = (text) => {
+  if (!text) return "";
+  return text.replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+}
 
 io.on('connection', (socket) => {
-// ... (código existente de io.on('connection'))
-  console.log('Un usuario se ha conectado:', socket.id);
+  console.log('Conexión socket:', socket.id);
 
+  // 1. Unirse al Lobby
   socket.on('joinLobby', (userData) => {
-    console.log('Usuario', userData.displayName, 'se unió al lobby');
-    const newUser = { id: socket.id, displayName: userData.displayName || `Jugador_${socket.id.substring(0,4)}` };
-    connectedUsers.push(newUser);
+    const displayName = userData.displayName || `Jugador`;
+    
+    // Verificar si ya existe para no duplicar en la lista visual
+    const existingUserIndex = connectedUsers.findIndex(u => u.id === socket.id);
+    if (existingUserIndex === -1) {
+        connectedUsers.push({ id: socket.id, displayName });
+        gameState.playerScores[socket.id] = 0; // Inicializar score
+    }
+    
     io.emit('updateUserList', connectedUsers);
-    socket.emit('welcomeMessage', `¡Bienvenido al lobby, ${newUser.displayName}!`);
+    socket.emit('welcomeMessage', `¡Bienvenido al lobby, ${displayName}!`);
   });
 
+  // 2. Iniciar el Torneo
+  socket.on('startTournament', async () => {
+    if (gameState.status === 'playing') return; // Ya empezó
+    
+    console.log("¡Iniciando torneo!");
+    gameState.status = 'playing';
+    gameState.currentRound = 0;
+    gameState.answersInRound = 0;
+    
+    // Resetear puntajes
+    connectedUsers.forEach(u => gameState.playerScores[u.id] = 0);
+
+    // Obtener preguntas de la API
+    try {
+        const apiUrl = `https://opentdb.com/api.php?amount=${gameState.totalRounds}&type=multiple`;
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        
+        if (data.response_code === 0) {
+            gameState.questions = data.results;
+            io.emit('tournamentStarting'); // Avisar al frontend para cambiar de pantalla
+            
+            // Esperar 3 segundos y mandar la primera pregunta
+            setTimeout(() => sendNextQuestion(), 3000);
+        } else {
+            console.error("Error API OpenTDB");
+            gameState.status = 'lobby';
+        }
+    } catch (e) {
+        console.error("Error fetch:", e);
+        gameState.status = 'lobby';
+    }
+  });
+
+  // 3. Recibir Respuesta
+  socket.on('submitAnswer', (data) => {
+      const { answer } = data;
+      const currentQ = gameState.questions[gameState.currentRound];
+      
+      if (currentQ) {
+          const isCorrect = decodeHTMLEntities(answer) === decodeHTMLEntities(currentQ.correct_answer);
+          if (isCorrect) {
+              gameState.playerScores[socket.id] += 100; // 100 puntos por correcta
+          }
+      }
+
+      gameState.answersInRound++;
+
+      // Si todos respondieron, siguiente ronda
+      if (gameState.answersInRound >= connectedUsers.length) {
+          gameState.currentRound++;
+          gameState.answersInRound = 0;
+
+          if (gameState.currentRound < gameState.totalRounds) {
+              setTimeout(() => sendNextQuestion(), 2000); 
+          } else {
+              setTimeout(() => endGame(), 2000); 
+          }
+      }
+  });
+
+  // Desconexión
   socket.on('disconnect', () => {
-    console.log('Usuario desconectado:', socket.id);
+    console.log('Desconectado:', socket.id);
     connectedUsers = connectedUsers.filter(user => user.id !== socket.id);
+    delete gameState.playerScores[socket.id];
     io.emit('updateUserList', connectedUsers);
+    
+    if (connectedUsers.length === 0) {
+        gameState.status = 'lobby';
+    }
   });
 });
 
+// --- Funciones Auxiliares del Juego ---
+
+function sendNextQuestion() {
+    const q = gameState.questions[gameState.currentRound];
+    const allOptions = [...q.incorrect_answers, q.correct_answer].sort(() => Math.random() - 0.5);
+    
+    const questionPayload = {
+        round: gameState.currentRound + 1,
+        total: gameState.totalRounds,
+        category: q.category,
+        question: q.question,
+        options: allOptions
+    };
+    
+    io.emit('newQuestion', questionPayload);
+}
+
+function endGame() {
+    gameState.status = 'finished';
+    
+    const podium = connectedUsers.map(user => ({
+        displayName: user.displayName,
+        score: gameState.playerScores[user.id] || 0
+    })).sort((a, b) => b.score - a.score);
+
+    console.log("Torneo terminado. Podio:", podium);
+    io.emit('gameEnded', { podium });
+    
+    // Volver al lobby en 15 segundos
+    setTimeout(() => {
+        gameState.status = 'lobby';
+    }, 15000);
+}
 
 // --- Iniciar el Servidor ---
 server.listen(port, () => {

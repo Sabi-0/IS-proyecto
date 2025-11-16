@@ -1,20 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 import './TournamentGame.css';
+import { auth } from '../../firebaseConfig'; // Importamos auth
 
 const SOCKET_SERVER_URL = "https://glairy-debroah-downwardly.ngrok-free.dev";
 
-const TournamentGame = ({ user, onNavigate }) => {
+export const TournamentGame = ({ user, onNavigate }) => {
   const [questionData, setQuestionData] = useState(null);
-  const [waiting, setWaiting] = useState(true); 
-  const [message, setMessage] = useState("Preparando la sala...");
+  const [message, setMessage] = useState("Conectando a la sala de juego...");
   const [gameResults, setGameResults] = useState(null);
-
-  // --- NUEVOS ESTADOS PARA FEEDBACK ---
-  const [selectedAnswer, setSelectedAnswer] = useState(null); // Tu elección
-  const [correctAnswer, setCorrectAnswer] = useState(null); // La respuesta correcta
-  const [isAnswered, setIsAnswered] = useState(false); // Bloquea botones
-  const [isRoundOver, setIsRoundOver] = useState(false); // Muestra colores
+  
+  const [selectedAnswer, setSelectedAnswer] = useState(null); 
+  const [correctAnswer, setCorrectAnswer] = useState(null); 
+  const [isAnswered, setIsAnswered] = useState(false); 
+  const [isRoundOver, setIsRoundOver] = useState(false); 
   
   const socketRef = useRef(null);
 
@@ -28,52 +27,52 @@ const TournamentGame = ({ user, onNavigate }) => {
     socketRef.current = io(SOCKET_SERVER_URL, {
         extraHeaders: { 'ngrok-skip-browser-warning': 'true' }
     });
-
     const socket = socketRef.current;
 
-    socket.emit('joinLobby', { displayName: user?.displayName || 'Jugador' });
-    setMessage("Esperando que inicie el torneo..."); // Mensaje inicial
+    socket.on('connect', () => {
+        console.log("[DEBUG TournamentGame] Socket conectado ID:", socket.id);
+        if(user && !user.isAnonymous) {
+            auth.currentUser.getIdToken(true).then(token => {
+                socket.emit('joinLobby', { token });
+            });
+        }
+        setMessage("Esperando que inicie el torneo...");
+    });
 
     socket.on('newQuestion', (data) => {
-        console.log("Nueva pregunta recibida");
+        console.log("[DEBUG TournamentGame] Pregunta recibida:", data);
         setQuestionData(data);
-        // Reseteamos estados de ronda
         setSelectedAnswer(null);
         setCorrectAnswer(null);
         setIsAnswered(false);
         setIsRoundOver(false);
-        setWaiting(false); // Dejamos de esperar
-        setMessage("");
+        setMessage(""); 
     });
 
-    // --- NUEVO LISTENER PARA FEEDBACK ---
     socket.on('roundResults', (data) => {
-        console.log("Resultados de ronda:", data);
-        setCorrectAnswer(data.correctAnswer); // Guardamos la correcta
-        setIsRoundOver(true); // Activamos modo "mostrar colores"
-        setMessage("Ronda terminada. Cargando siguiente...");
+        console.log("[DEBUG TournamentGame] Resultados de ronda:", data);
+        setCorrectAnswer(data.correctAnswer);
+        setIsRoundOver(true); 
+        setMessage("Ronda terminada. Cargando siguiente pregunta...");
     });
 
     socket.on('gameEnded', (results) => {
-        console.log("Juego terminado");
+        console.log("[DEBUG TournamentGame] Fin del juego:", results);
         setGameResults(results);
-        setWaiting(true); 
     });
 
-    return () => socket.disconnect();
-  }, [user]); // Dependencia [user] está bien
+    return () => {
+        console.log("[DEBUG TournamentGame] Desconectando...");
+        socket.disconnect();
+    };
+  }, [user]); 
 
   const handleAnswer = (option) => {
-      // No hacer nada si ya se respondió
       if (isAnswered) return;
-
-      setIsAnswered(true); // Bloquear botones
-      setSelectedAnswer(option); // Marcar tu elección visualmente
+      setIsAnswered(true); 
+      setSelectedAnswer(option); 
       setMessage("¡Respuesta enviada! Esperando a los demás...");
-      
-      socketRef.current.emit('submitAnswer', { 
-          answer: option, 
-      });
+      socketRef.current.emit('submitAnswer', { answer: option });
   };
 
   // --- RENDERIZADO DE RESULTADOS ---
@@ -82,7 +81,7 @@ const TournamentGame = ({ user, onNavigate }) => {
       return (
           <div className="tournament-container results-bg">
               <div className="tournament-box">
-                  <h1>🏆 Torneo Finalizado 🏆</h1>
+                  <h1>🏆 ¡Torneo Finalizado! 🏆</h1>
                   <h2>Ganador: {winner.displayName}</h2>
                   <div className="podium-list">
                       {gameResults.podium.map((p, i) => (
@@ -99,20 +98,36 @@ const TournamentGame = ({ user, onNavigate }) => {
       );
   }
 
-  // --- RENDERIZADO DE ESPERA ---
-  if (waiting && !questionData) {
+  // --- RENDERIZADO DE ESPERA (Carga inicial o entre rondas) ---
+  if (!questionData || isRoundOver) {
       return (
           <div className="tournament-container">
               <div className="waiting-box">
                   <h2>{message}</h2>
                   <div className="spinner">⏳</div>
+                  {/* Mostramos la pregunta anterior con los resultados si estamos entre rondas */}
+                  {isRoundOver && questionData && (
+                    <div className="tournament-box game-mode" style={{marginTop: '20px', opacity: 0.8}}>
+                        <h2 className="question-text-online">{decodeHTML(questionData.question)}</h2>
+                        <div className="options-grid-online">
+                            {questionData.options.map((opt, i) => {
+                              let btnClass = "option-btn-online";
+                              const decodedOpt = decodeHTML(opt);
+                              if (decodedOpt === decodeHTML(correctAnswer)) {
+                                  btnClass += " correct";
+                              } else if (decodedOpt === decodeHTML(selectedAnswer)) {
+                                  // --- ¡ARREGLO DE TYPO! ---
+                                  btnClass += " incorrect";
+                              }
+                              return <button key={i} className={btnClass} disabled>{decodedOpt}</button>;
+                            })}
+                        </div>
+                    </div>
+                  )}
               </div>
           </div>
       );
   }
-  
-  // Si questionData es nulo aquí, es un error, pero el waiting lo agarra
-  if (!questionData) return null; 
 
   // --- RENDERIZADO DE JUEGO ---
   return (
@@ -127,17 +142,8 @@ const TournamentGame = ({ user, onNavigate }) => {
         
         <div className="options-grid-online">
             {questionData.options.map((opt, i) => {
-              // --- LÓGICA DE CLASES CSS PARA FEEDBACK ---
               let btnClass = "option-btn-online";
-              if (isRoundOver) {
-                // Ronda terminó, mostrar correcta e incorrecta
-                if (decodeHTML(opt) === decodeHTML(correctAnswer)) {
-                  btnClass += " correct";
-                } else if (decodeHTML(opt) === decodeHTML(selectedAnswer)) {
-                  btnClass += " incorrect";
-                }
-              } else if (isAnswered) {
-                // Ronda en curso, solo mostrar mi selección
+              if (isAnswered) {
                 if (decodeHTML(opt) === decodeHTML(selectedAnswer)) {
                   btnClass += " selected";
                 }
@@ -148,7 +154,7 @@ const TournamentGame = ({ user, onNavigate }) => {
                   key={i} 
                   onClick={() => handleAnswer(opt)} 
                   className={btnClass}
-                  disabled={isAnswered} // Deshabilitar botones al responder
+                  disabled={isAnswered} 
                 >
                     {decodeHTML(opt)}
                 </button>
@@ -166,6 +172,3 @@ const TournamentGame = ({ user, onNavigate }) => {
     </div>
   );
 };
-
-// --- ¡Exportación por Defecto! ---
-export default TournamentGame;

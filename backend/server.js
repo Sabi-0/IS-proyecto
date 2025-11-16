@@ -161,14 +161,14 @@ const io = new Server(server, {
 });
 
 // --- Estado Global del Torneo ---
-let connectedUsers = []; // Guarda { id: socketId, displayName: '...', uid: '...' }
+let connectedUsers = []; 
 let gameState = {
-  status: 'lobby', // 'lobby', 'loading', 'playing', 'finished'
+  status: 'lobby', 
   currentQuestionIndex: 0,
-  totalQuestions: 15, // 3 Rondas x 5 Preguntas
+  totalQuestions: 15, 
   questions: [],   
-  playerScores: {}, // { socketId: { score: 100, name: 'Samuel', uid: '...' } }
-  playerAnswers: {} // { socketId: 'Respuesta' }
+  playerScores: {}, 
+  playerAnswers: {} 
 };
 
 const decodeHTMLEntities = (text) => {
@@ -186,15 +186,11 @@ io.on('connection', (socket) => {
   // --- 1. UNIRSE AL LOBBY (AHORA SEGURO CON TOKEN) ---
   socket.on('joinLobby', async (data) => {
     try {
-      // Verificamos el token de Firebase que envía el cliente
       const decodedToken = await admin.auth().verifyIdToken(data.token);
       const user_uid = decodedToken.uid;
-
-      // Buscamos el nombre de usuario en nuestra DB de Supabase
       const { rows } = await pool.query('SELECT display_name FROM users WHERE firebase_uid = $1', [user_uid]);
       const displayName = rows.length > 0 ? rows[0].display_name : "Jugador";
 
-      // Añadimos al usuario a la lista
       const existingUser = connectedUsers.find(u => u.id === socket.id);
       if (!existingUser) {
           const newUser = { id: socket.id, displayName, uid: user_uid };
@@ -206,7 +202,7 @@ io.on('connection', (socket) => {
       socket.emit('welcomeMessage', `¡Bienvenido al lobby, ${displayName}!`);
 
     } catch (error) {
-      console.error("Error en joinLobby (token inválido?):", error.message);
+      console.error("Error en joinLobby:", error.message);
       socket.emit('error', 'Autenticación fallida.');
     }
   });
@@ -225,11 +221,10 @@ io.on('connection', (socket) => {
       }
     });
 
-    io.emit('gameLoading'); // Feedback visual
+    io.emit('gameLoading'); 
 
     try {
         let allQuestions = [];
-        // Pedimos 3 rondas de 5 preguntas
         for (let i = 0; i < 3; i++) {
             const category = getRandomCategoryID();
             const difficulty = getRandomDifficulty();
@@ -240,7 +235,6 @@ io.on('connection', (socket) => {
             if (data.response_code === 0 && data.results.length > 0) {
                 allQuestions.push(...data.results);
             } else {
-                // Si la API falla, intentamos una genérica
                 const retryResponse = await fetch(`https://opentdb.com/api.php?amount=5&type=multiple`);
                 const retryData = await retryResponse.json();
                 if (retryData.results && retryData.results.length > 0) {
@@ -250,18 +244,16 @@ io.on('connection', (socket) => {
         }
         
         // --- ¡ARREGLO DEL BUG! ---
-        // 1. Revisar si tenemos CUALQUIER pregunta
         if (allQuestions.length === 0) {
             console.warn("API falló completamente. Usando 15 preguntas de respaldo.");
-            gameState.questions = [...BACKUP_QUESTIONS]; // Usar una copia
+            gameState.questions = [...BACKUP_QUESTIONS]; 
         } else {
-            // 2. Si tenemos, pero menos de 15, rellenar
             if (allQuestions.length < 15) {
                 console.warn(`API solo trajo ${allQuestions.length}. Rellenando...`);
                 const needed = 15 - allQuestions.length;
                 allQuestions.push(...BACKUP_QUESTIONS.slice(0, needed));
             }
-            gameState.questions = allQuestions.slice(0, 15); // Asegurar 15
+            gameState.questions = allQuestions.slice(0, 15); 
         }
         
         gameState.totalQuestions = gameState.questions.length;
@@ -275,13 +267,13 @@ io.on('connection', (socket) => {
 
     gameState.status = 'playing';
     io.emit('tournamentStarting'); 
-    setTimeout(() => sendNextQuestion(), 2000); // Empezar el juego
+    setTimeout(() => sendNextQuestion(), 2000); 
   });
 
   // --- 3. RECIBIR RESPUESTA (Sin cambios) ---
   socket.on('submitAnswer', (data) => {
-      if (gameState.playerAnswers[socket.id]) return; // Ya respondió
-      if (!gameState.questions[gameState.currentQuestionIndex]) return; // Juego terminó
+      if (gameState.playerAnswers[socket.id]) return; 
+      if (!gameState.questions[gameState.currentQuestionIndex]) return; 
       
       const { answer } = data;
       const currentQ = gameState.questions[gameState.currentQuestionIndex];
@@ -290,7 +282,6 @@ io.on('connection', (socket) => {
       if (currentQ) {
           const isCorrect = decodeHTMLEntities(answer) === decodeHTMLEntities(currentQ.correct_answer);
           if (isCorrect) {
-            // Asegurarse que el score existe antes de sumar
             if (gameState.playerScores[socket.id]) {
                 gameState.playerScores[socket.id].score += 100;
             }
@@ -303,23 +294,27 @@ io.on('connection', (socket) => {
       }
   });
 
-  // --- 4. DESCONEXIÓN (Sin cambios) ---
+  // --- 4. DESCONEXIÓN (ARREGLO DEL BUG) ---
   socket.on('disconnect', () => {
     console.log('Desconectado:', socket.id);
     const wasInLobby = connectedUsers.some(u => u.id === socket.id);
     connectedUsers = connectedUsers.filter(user => user.id !== socket.id);
-    // No borramos el puntaje, por si se reconecta
-    // delete gameState.playerScores[socket.id]; 
     delete gameState.playerAnswers[socket.id]; 
     
     if(wasInLobby) io.emit('updateUserList', connectedUsers);
     
-    if (connectedUsers.length === 0) {
+    // --- ¡CORRECCIÓN CLAVE! ---
+    // SOLO reseteamos el juego si todos se van Y el juego está en 'lobby'.
+    // Si están jugando o cargando, el estado del juego se mantiene.
+    if (connectedUsers.length === 0 && gameState.status === 'lobby') {
+        console.log("Todos se fueron del lobby. Reseteando estado.");
         gameState.status = 'lobby';
         gameState.questions = [];
     } else {
+        // Si el juego está en curso, verificamos si el que se fue era el último que faltaba por responder
         const answeredCount = Object.keys(gameState.playerAnswers).length;
         if (gameState.status === 'playing' && answeredCount >= connectedUsers.length) {
+            console.log("El último jugador se desconectó. Terminando ronda.");
             endRound();
         }
     }
@@ -335,6 +330,13 @@ function sendNextQuestion() {
     }
     gameState.playerAnswers = {}; // Reseteamos respuestas
     const q = gameState.questions[gameState.currentQuestionIndex];
+    
+    // Fallback por si la API falla y 'q' es undefined
+    if (!q) {
+        console.error(`Error: Intento de enviar pregunta ${gameState.currentQuestionIndex} pero no existe.`);
+        return endGame();
+    }
+
     const allOptions = [...q.incorrect_answers, q.correct_answer].sort(() => Math.random() - 0.5);
     
     const questionPayload = {
@@ -349,20 +351,18 @@ function sendNextQuestion() {
 
 function endRound() {
     const currentQ = gameState.questions[gameState.currentQuestionIndex];
+    if (!currentQ) return endGame(); // Seguridad
     
-    // 1. Enviamos la respuesta correcta (¡el frontend lo necesita!)
     io.emit('roundResults', { 
         correctAnswer: currentQ.correct_answer 
     });
 
-    // 2. Pasamos a la siguiente pregunta
     gameState.currentQuestionIndex++;
     
-    // 3. Verificamos si el juego terminó
     if (gameState.currentQuestionIndex >= gameState.totalQuestions) {
-        setTimeout(() => endGame(), 3000); // Esperar 3s para mostrar podio
+        setTimeout(() => endGame(), 3000); 
     } else {
-        setTimeout(() => sendNextQuestion(), 3000); // Esperar 3s para ver la respuesta
+        setTimeout(() => sendNextQuestion(), 3000); 
     }
 }
 
@@ -374,23 +374,20 @@ async function endGame() {
 
     console.log("Torneo terminado. Guardando en BD y enviando podio:", podium);
     
-    // --- ¡NUEVO! GUARDAR RESULTADOS EN LA BASE DE DATOS ---
+    // --- GUARDAR RESULTADOS EN LA BASE DE DATOS ---
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
-        // Usamos Promise.all para guardar todos los puntajes en paralelo
         const savePromises = [];
         for (const player of podium) {
-            if (player.uid) { // Solo si tenemos el UID (no anónimos)
+            if (player.uid) { 
                 const score = player.score;
-                const correctAnswers = score / 100; // 100 pts por acierto
+                const correctAnswers = score / 100; 
                 const incorrectAnswers = gameState.totalQuestions - correctAnswers;
                 
-                // 1. Guardar la sesión
                 const sessionQuery = `INSERT INTO game_sessions (user_uid, game_mode, category_name, difficulty, score, questions_total, started_at, ended_at) VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())`;
                 savePromises.push(client.query(sessionQuery, [player.uid, 'tournament', 'Variado', 'Variada', score, gameState.totalQuestions]));
                 
-                // 2. Actualizar estadísticas
                 const statsQuery = `UPDATE user_stats SET total_score = total_score + $1, games_played = games_played + 1, correct_answers = correct_answers + $2, incorrect_answers = incorrect_answers + $3 WHERE user_uid = $4`;
                 savePromises.push(client.query(statsQuery, [score, correctAnswers, incorrectAnswers, player.uid]));
             }
@@ -404,7 +401,6 @@ async function endGame() {
     } finally {
         client.release();
     }
-    // --- FIN DE GUARDADO EN BD ---
 
     io.emit('gameEnded', { podium });
     

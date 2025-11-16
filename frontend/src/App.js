@@ -15,7 +15,7 @@ import CourseView from './components/Learning/CourseView';
 import LessonView from './components/Learning/LessonView';
 import ProfilePage from './components/Profile/ProfilePage';
 // Importamos el juego de torneo
-import TournamentGame  from './components/Multiplayer/TournamentGame'; 
+import {TournamentGame}  from './components/Multiplayer/TournamentGame'; 
 
 // Imports de Firebase
 import { auth } from './firebaseConfig.js';

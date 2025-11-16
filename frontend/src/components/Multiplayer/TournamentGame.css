@@ -1,0 +1,174 @@
+/* --- Contenedor Principal --- */
+.tournament-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: transparent; /* El fondo lo da el body */
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* --- Caja Principal (Glassmorphism) --- */
+.tournament-box {
+  background: var(--card-background);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 40px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 800px;
+  text-align: center;
+  position: relative;
+  color: var(--text-color);
+}
+
+/* --- Header del Juego (Ronda y Categoría) --- */
+.tournament-box .game-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  font-weight: 700;
+  color: var(--color-accent);
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--card-border);
+  padding-bottom: 15px;
+}
+
+/* --- Pregunta --- */
+.tournament-box .question-text-online {
+  font-size: 1.5rem;
+  margin-bottom: 40px;
+  line-height: 1.4;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+/* --- Grid de Opciones --- */
+.tournament-box .options-grid-online {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Dos columnas */
+  gap: 20px;
+}
+
+/* --- ESTILOS DE BOTONES (AHORA AISLADOS) --- */
+
+/* Botón base (Píldora Outline) */
+.tournament-box .option-btn-online {
+  padding: 1rem 1.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: transparent;
+  border: 2px solid var(--color-accent);
+  color: var(--color-accent);
+}
+
+/* Cuando el usuario lo SELECCIONA (antes de la respuesta) */
+.tournament-box .option-btn-online.selected {
+  background-color: var(--color-accent);
+  color: var(--primary-button-text);
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(138, 43, 226, 0.2);
+}
+
+/* Cuando la ronda termina y es CORRECTO */
+.tournament-box .option-btn-online.correct {
+  background-color: var(--color-easy);
+  border-color: var(--color-easy);
+  color: var(--primary-button-text);
+  transform: scale(1.05);
+  box-shadow: 0 5px 20px rgba(102, 187, 106, 0.3);
+}
+
+/* Cuando la ronda termina y es INCORRECTO */
+.tournament-box .option-btn-online.incorrect {
+  background-color: var(--color-hard);
+  border-color: var(--color-hard);
+  color: var(--primary-button-text);
+  opacity: 0.7;
+}
+
+/* Cuando está BLOQUEADO (después de responder) */
+.tournament-box .option-btn-online:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.tournament-box .option-btn-online.selected:hover,
+.tournament-box .option-btn-online:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* --- Overlay de Espera --- */
+.tournament-box .waiting-overlay {
+  padding: 40px 0 0 0;
+  font-style: italic;
+  color: var(--text-color);
+  opacity: 0.7;
+  font-weight: 500;
+  height: 50px; /* Le damos altura fija para que no salte */
+}
+
+/* Caja de espera (antes de empezar) */
+.waiting-box h2 {
+    color: var(--color-accent);
+    margin-bottom: 20px;
+}
+
+.spinner {
+    font-size: 3rem;
+    animation: spin 2s infinite linear;
+    display: inline-block;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* --- Resultados / Podio --- */
+.tournament-box .podium-list {
+  margin: 30px 0;
+  text-align: left;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.tournament-box .podium-item {
+  padding: 15px;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.2rem;
+}
+
+.tournament-box .podium-item:last-child {
+  border-bottom: none;
+}
+
+.tournament-box .rank-1 { color: #FFD700; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.2); } /* Oro */
+.tournament-box .rank-2 { color: #C0C0C0; font-weight: 700; } /* Plata */
+.tournament-box .rank-3 { color: #CD7F32; font-weight: 700; } /* Bronce */
+
+.tournament-box .exit-button {
+  margin-top: 20px;
+  padding: 10px 30px;
+  background: var(--color-easy);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.tournament-box .exit-button:hover {
+  transform: scale(1.05);
+}

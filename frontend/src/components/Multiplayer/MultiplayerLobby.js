@@ -3,20 +3,17 @@ import io from 'socket.io-client';
 import './MultiplayerLobby.css';
 
 // --- ¡URL DEL BACKEND PARA DESPLIEGUE! ---
-// ¡YA ESTÁ ACTUALIZADA CON TU URL DE NGROK!
 const SOCKET_SERVER_URL = "https://glairy-debroah-downwardly.ngrok-free.dev";
-// ---
 
-const MultiplayerLobby = ({ user, onBack }) => {
-// ... (estados existentes sin cambios)
+// Añadimos 'onNavigate' a las props para poder cambiar de pantalla
+const MultiplayerLobby = ({ user, onNavigate, onBack }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [lobbyUsers, setLobbyUsers] = useState([]);
   const [welcomeMsg, setWelcomeMsg] = useState('');
   const socketRef = useRef(null); 
 
   useEffect(() => {
-    // --- ¡CORRECCIÓN NGROK! ---
-    // Añadimos la cabecera especial en la conexión del socket
+    // --- Conexión con cabecera de ngrok ---
     socketRef.current = io(SOCKET_SERVER_URL, {
       extraHeaders: {
         'ngrok-skip-browser-warning': 'true'
@@ -25,7 +22,6 @@ const MultiplayerLobby = ({ user, onBack }) => {
     const socket = socketRef.current;
 
     socket.on('connect', () => {
-// ... (código existente sin cambios)
       console.log('Conectado al servidor WebSocket!');
       setIsConnected(true);
       socket.emit('joinLobby', { 
@@ -34,7 +30,6 @@ const MultiplayerLobby = ({ user, onBack }) => {
     });
 
     socket.on('disconnect', () => {
-// ... (código existente sin cambios)
       console.log('Desconectado del servidor WebSocket.');
       setIsConnected(false);
       setLobbyUsers([]); 
@@ -42,26 +37,37 @@ const MultiplayerLobby = ({ user, onBack }) => {
     });
 
     socket.on('updateUserList', (users) => {
-// ... (código existente sin cambios)
       console.log('Lista de usuarios actualizada:', users);
       setLobbyUsers(users);
     });
     
     socket.on('welcomeMessage', (msg) => {
-// ... (código existente sin cambios)
         setWelcomeMsg(msg);
     });
 
+    // --- NUEVO: ESCUCHAR INICIO DE TORNEO ---
+    // Cuando el servidor dice "Empiecen", nos movemos a la pantalla de juego
+    socket.on('tournamentStarting', () => {
+        console.log("¡El torneo comienza!");
+        onNavigate('tournament-game'); 
+    });
+
     return () => {
-// ... (código existente sin cambios)
       console.log('Desconectando socket...');
       socket.disconnect();
     };
-  }, [user]); 
+  }, [user, onNavigate]); 
+
+  // --- NUEVO: FUNCIÓN PARA INICIAR EL JUEGO ---
+  const handleStartGame = () => {
+      if (socketRef.current) {
+          // Le decimos al servidor que inicie el torneo para todos
+          socketRef.current.emit('startTournament');
+      }
+  };
 
   return (
     <div className="multiplayer-lobby-container">
-{/* ... (código de renderizado existente sin cambios) */}
       <div className="multiplayer-lobby-box">
         <button onClick={onBack} className="back-button-lobby-mp">← Volver al Inicio</button>
         <h2>Lobby Multijugador</h2>
@@ -86,9 +92,14 @@ const MultiplayerLobby = ({ user, onBack }) => {
             <p className="empty-lobby-text">Esperando jugadores...</p>
           )}
 
-          {lobbyUsers.length >= 2 && isConnected && (
-             <button className="start-game-button-placeholder" disabled>
-               Iniciar Partida (Próximamente)
+          {/* --- BOTÓN ACTIVADO --- */}
+          {/* Cambiamos la lógica: Si hay gente y estamos conectados, el botón funciona */}
+          {lobbyUsers.length >= 1 && isConnected && (
+             <button 
+                className="start-game-button-placeholder" 
+                onClick={handleStartGame} // Ahora llama a la función
+             >
+               ¡INICIAR TORNEO! (3 Rondas)
              </button>
           )}
         </div>

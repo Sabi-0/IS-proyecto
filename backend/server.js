@@ -282,6 +282,7 @@ const io = new Server(server, {
     // Ahora aceptamos ambas URLs: tu localhost y tu Vercel
     origin: [
       "http://localhost:3000", 
+      "https://is-proyecto.vercel.app",
       "https://is-proyecto-doud.vercel.app"
     ],
     methods: ["GET", "POST"]

@@ -370,6 +370,11 @@ async function endGame() {
     gameState.status = 'finished';
     
     const podium = Object.values(gameState.playerScores)
+      map(player => ({
+            displayName: player.name, 
+            score: player.score,
+            uid: player.uid
+        }))
         .sort((a, b) => b.score - a.score);
 
     console.log("Torneo terminado. Guardando en BD y enviando podio:", podium);

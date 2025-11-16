@@ -235,11 +235,49 @@ app.get('/leaderboard', async (req, res) => {
   }
 });
 
+// GET /learning/progress - Obtener qué lecciones ha completado el usuario
+app.get('/learning/progress', verificarToken, async (req, res) => {
+  const user_uid = req.user.uid;
+  try {
+    // Asumiendo que creaste la tabla 'user_lesson_progress' con el script SQL
+    const query = 'SELECT lesson_id FROM user_lesson_progress WHERE user_uid = $1';
+    const { rows } = await pool.query(query, [user_uid]);
+    
+    // Devolvemos un array simple de IDs: ['m1-l1', 'm1-l2']
+    const completedLessonIds = rows.map(row => row.lesson_id);
+    res.status(200).json(completedLessonIds);
+  } catch (error) {
+    console.error('Error al obtener progreso de aprendizaje:', error);
+    res.status(500).send({ error: 'Error interno.' });
+  }
+});
+
+// POST /learning/complete - Marcar una lección como completada
+app.post('/learning/complete', verificarToken, async (req, res) => {
+  const user_uid = req.user.uid;
+  const { lessonId } = req.body;
+
+  if (!lessonId) return res.status(400).send({ error: 'Falta el ID de la lección.' });
+
+  try {
+    // Guardamos el progreso. ON CONFLICT DO NOTHING evita errores si ya estaba completada.
+    const query = `
+      INSERT INTO user_lesson_progress (user_uid, lesson_id, completed_at)
+      VALUES ($1, $2, NOW())
+      ON CONFLICT (user_uid, lesson_id) DO NOTHING
+    `;
+    await pool.query(query, [user_uid, lessonId]);
+    res.status(200).send({ message: 'Lección registrada como completada.' });
+  } catch (error) {
+    console.error('Error al guardar progreso de aprendizaje:', error);
+    res.status(500).send({ error: 'Error interno.' });
+  }
+});
+
 
 // --- Configuración del Servidor HTTP y Socket.io ---
 const server = http.createServer(app); 
 
-// --- ¡¡¡CORRECCIÓN CLAVE DE CORS PARA SOCKET.IO!!! ---
 const io = new Server(server, {
   cors: {
     // Ahora aceptamos ambas URLs: tu localhost y tu Vercel
@@ -250,7 +288,7 @@ const io = new Server(server, {
     methods: ["GET", "POST"]
   }
 });
-// --- FIN DE LA CORRECCIÓN ---
+
 
 let connectedUsers = []; 
 

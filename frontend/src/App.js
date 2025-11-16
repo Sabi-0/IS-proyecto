@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 // Imports de componentes
-// ... (todos tus imports de componentes se mantienen igual)
-import AuthPage from './components/AuthPage/AuthPage.js';
+import AuthPage from './components/Authpage/AuthPage';
 import LandingPage from './components/LandingPage/LandingPage';
 import HomePage from './components/HomePage/HomePage';
 import CategorySelection from './components/Trivia/CategorySelection';
@@ -20,24 +19,21 @@ import ProfilePage from './components/Profile/ProfilePage';
 import { auth } from './firebaseConfig.js';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 
-// Imports de datos
+// Imports de datos (Solo para estructura de cursos, no para estado)
 import { lessonsData } from './data/learningData';
 
-// --- ¡URL DEL BACKEND PARA DESPLIEGUE! ---
-// ¡YA ESTÁ ACTUALIZADA CON TU URL DE NGROK!
+// --- ¡URL DEL BACKEND (NGROK)! ---
 const BACKEND_URL = 'https://glairy-debroah-downwardly.ngrok-free.dev';
 // ---
 
 // --- Funciones de utilidad y traducción ---
 const decodeHTML = (html) => {
-// ... (código existente sin cambios)
   const txt = document.createElement("textarea");
   txt.innerHTML = html;
   return txt.value;
 };
 
 async function translateTriviaWithMyMemory(questions) {
-// ... (código de traducción existente sin cambios)
     console.log("--- Translation Step 1: Preparing texts for MyMemory API ---");
     const uniqueTexts = new Set();
     questions.forEach(q => {
@@ -75,70 +71,74 @@ async function translateTriviaWithMyMemory(questions) {
 }
 
 function App() {
-// ... (estados existentes sin cambios)
   const [user, setUser] = useState(null);
   const [appState, setAppState] = useState('landing');
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [isUserSynced, setIsUserSynced] = useState(false); 
   
+  // Estados de Juego
   const [currentQuestions, setCurrentQuestions] = useState([]);
   const [currentCategory, setCurrentCategory] = useState({ id: 0, name: '', difficulty: '' });
   const [finalScore, setFinalScore] = useState(0);
 
+  // Estados de Aprendizaje
   const [selectedCourseId, setSelectedCourseId] = useState(null);
   const [selectedLessonId, setSelectedLessonId] = useState(null);
-  const [lessonProgressUpdate, setLessonProgressUpdate] = useState(0); 
+  // NUEVO: Array que guarda los IDs de lecciones completadas (desde la BD)
+  const [completedLessons, setCompletedLessons] = useState([]); 
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
         setAppState('homepage');
+        
         if (currentUser.isAnonymous) {
-// ... (código existente sin cambios)
-            console.log('Usuario invitado detectado. No se requiere sincronización con el backend.');
+            console.log('Usuario invitado. Funciones de guardado deshabilitadas.');
             setIsAuthLoading(false);
             return; 
         }
-        if (isUserSynced) {
-// ... (código existente sin cambios)
-            setIsAuthLoading(false);
-            return; 
-        }
-        console.log('Usuario registrado autenticado, sincronizando con el backend...');
-        currentUser.getIdToken(true) 
+        
+        if (!isUserSynced) {
+            console.log('Usuario autenticado. Sincronizando usuario y cargando progreso...');
+            currentUser.getIdToken(true) 
             .then((idToken) => {
-                return fetch(`${BACKEND_URL}/sync-user`, { 
+                // Hacemos dos peticiones en paralelo: Sincronizar usuario y Cargar progreso
+                const syncPromise = fetch(`${BACKEND_URL}/sync-user`, { 
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${idToken}`,
-                        // --- ¡CORRECCIÓN NGROK! ---
-                        'ngrok-skip-browser-warning': 'true'
-                    }
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}`, 'ngrok-skip-browser-warning': 'true' }
                 });
+
+                const progressPromise = fetch(`${BACKEND_URL}/learning/progress`, {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${idToken}`, 'ngrok-skip-browser-warning': 'true' }
+                });
+
+                return Promise.all([syncPromise, progressPromise]);
             })
-            .then(response => {
-// ... (código existente sin cambios)
-                if (!response.ok) { 
-                    throw new Error(`El backend respondió con estado: ${response.status}`);
+            .then(async ([syncRes, progressRes]) => {
+                if(syncRes.ok) console.log("Usuario sincronizado con éxito.");
+                
+                if(progressRes.ok) {
+                    const progressData = await progressRes.json();
+                    // Actualizamos el estado con las lecciones que vienen de la BD
+                    setCompletedLessons(progressData); 
+                    console.log("Progreso cargado desde BD:", progressData);
+                } else {
+                    console.warn("No se pudo cargar el progreso.");
                 }
-                return response.json();
-            })
-            .then(data => {
-// ... (código existente sin cambios)
-                console.log('Respuesta de sincronización del backend:', data.message);
                 setIsUserSynced(true); 
             })
             .catch(error => {
-// ... (código existente sin cambios)
-                console.error('Error al sincronizar usuario con el backend:', error);
-                setErrorMessage('Error al conectar con el servidor.');
+                console.error('Error en inicialización:', error);
+                setErrorMessage('Error de conexión con el servidor.');
             });
+        }
       } else {
         setAppState('landing');
         setIsUserSynced(false); 
+        setCompletedLessons([]); // Limpiamos al salir
       }
       setIsAuthLoading(false);
     });
@@ -146,13 +146,10 @@ function App() {
   }, [isUserSynced]); 
 
   const handleLogout = async () => {
-// ... (código existente sin cambios)
     await signOut(auth);
   };
 
   const fetchTrivia = async (categoryId, categoryName, difficulty) => {
-// ... (código de fetchTrivia existente sin cambios)
-// ... (Este código llama a OpenTDB y MyMemory, no a tu backend, así que se queda igual)
     setErrorMessage('');
     setAppState('loading-trivia');
     setCurrentCategory({ id: categoryId, name: categoryName || 'Aleatoria', difficulty: difficulty || 'any' });
@@ -214,14 +211,12 @@ function App() {
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${idToken}`,
-              // --- ¡CORRECCIÓN NGROK! ---
               'ngrok-skip-browser-warning': 'true'
             },
             body: JSON.stringify(gameData)
           });
         })
         .then(response => response.json())
-// ... (código existente sin cambios)
         .then(data => {
           console.log('Respuesta de /save-score:', data.message);
         })
@@ -232,12 +227,10 @@ function App() {
   };
 
   const handlePlayAgain = () => {
-// ... (código existente sin cambios)
     setAppState('homepage');
   };
 
   // --- LÓGICA DE PROGRESO DE APRENDIZAJE ---
-// ... (código existente sin cambios)
   const handleSelectCourse = (courseId) => {
       setSelectedCourseId(courseId);
       setAppState('course-view');
@@ -250,18 +243,33 @@ function App() {
   };
   
   const handleCompleteLesson = (courseId, lessonId) => {
-      console.log(`Intentando completar lección ${lessonId} del curso ${courseId}`);
-      const courseLessons = lessonsData[courseId];
-      if (courseLessons) {
-          const lessonIndex = courseLessons.findIndex(l => l.id === lessonId);
-          if (lessonIndex !== -1) {
-              lessonsData[courseId][lessonIndex].completed = true;
-              console.log(`Lección ${lessonId} marcada como completada.`);
-              setLessonProgressUpdate(prev => prev + 1); 
-          }
+      console.log(`Lección ${lessonId} aprobada!`);
+      
+      // 1. Actualización optimista (para que la interfaz responda rápido)
+      setCompletedLessons(prev => [...prev, lessonId]);
+      
+      // 2. Guardar en la base de datos
+      if (user && !user.isAnonymous) {
+          user.getIdToken(true).then(token => {
+              fetch(`${BACKEND_URL}/learning/complete`, {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${token}`,
+                      'ngrok-skip-browser-warning': 'true'
+                  },
+                  body: JSON.stringify({ lessonId })
+              })
+              .then(res => {
+                  if(res.ok) console.log("Progreso guardado en BD.");
+                  else console.error("Error al guardar en BD.");
+              })
+              .catch(err => console.error("Error de conexión al guardar progreso:", err));
+          });
       }
+
       setSelectedLessonId(null);
-      setAppState('course-view');
+      setAppState('course-view'); 
   };
 
   const handleBackToCourseList = () => {
@@ -270,16 +278,13 @@ function App() {
   };
   
   const handleBackToLessonList = () => {
-      setSelectedCourseId(null);
+      setSelectedLessonId(null);
       setAppState('course-view');
   };
 
   const handleNavigation = (path) => {
-// ... (código existente sin cambios)
     console.log(`[DEBUG App.js] handleNavigation fue llamado con: '${path}'`);
-    
     const cleanPath = path.startsWith('/') ? path.substring(1) : path;
-    console.log(`[DEBUG App.js] Path limpiado es: '${cleanPath}'`);
     
     if (cleanPath === 'trivia-random') fetchTrivia(null, null, 'medium');
     else setAppState(cleanPath); 
@@ -287,7 +292,6 @@ function App() {
   };
 
   const renderContent = () => {
-// ... (código existente sin cambios)
     if (isAuthLoading) return <div className="loading-screen">Cargando...</div>;
 
     if (appState === 'homepage') {
@@ -299,10 +303,7 @@ function App() {
       );
     }
 
-    console.log(`[DEBUG App.js] renderContent se esta ejecutando con appState: '${appState}'`);
-
     switch (appState) {
-// ... (todos tus casos existentes se mantienen igual)
       case 'landing':
         return <LandingPage onNavigateToAuth={() => setAppState('auth')} />;
       case 'auth':
@@ -311,43 +312,53 @@ function App() {
       case 'category-selection':
         return <CategorySelection onSelectCategoryAndDifficulty={fetchTrivia} onBack={() => setAppState('homepage')} />;
       case 'loading-trivia':
-        return <div className="loading-screen">Cargando trivia de {currentCategory.name} ({currentCategory.difficulty || 'Mixta'})...</div>;
+        return <div className="loading-screen">Cargando trivia...</div>;
       case 'trivia-game':
-        return <TriviaGame questions={currentQuestions} categoryName={`${currentCategory.name} (${currentCategory.difficulty || 'Mixta'})`} onGameEnd={handleGameEnd} />;
+        return <TriviaGame questions={currentQuestions} categoryName={currentCategory.name} onGameEnd={handleGameEnd} />;
       case 'trivia-results':
         return <TriviaResults score={finalScore} totalQuestions={currentQuestions.length} onPlayAgain={handlePlayAgain} />;
       
+      // --- SECCIÓN DE APRENDIZAJE ---
       case 'learning':
         return <LearningDashboard onSelectCourse={handleSelectCourse} onBack={() => setAppState('homepage')} />;
       case 'course-view':
-        return <CourseView key={lessonProgressUpdate} courseId={selectedCourseId} onSelectLesson={handleSelectLesson} onBack={handleBackToCourseList} />;
+        // Pasamos 'completedLessons' (array de IDs) al componente para que pinte los candados
+        return (
+            <CourseView 
+                courseId={selectedCourseId} 
+                completedLessons={completedLessons} 
+                onSelectLesson={handleSelectLesson} 
+                onBack={handleBackToCourseList} 
+            />
+        );
        case 'lesson-view':
-        return <LessonView courseId={selectedCourseId} lessonId={selectedLessonId} onCompleteLesson={handleCompleteLesson} onBack={handleBackToLessonList} />;
+        return (
+            <LessonView 
+                courseId={selectedCourseId} 
+                lessonId={selectedLessonId} 
+                onCompleteLesson={handleCompleteLesson} 
+                onBack={handleBackToLessonList} 
+            />
+        );
 
       case 'leaderboard':
         return <Leaderboard onBack={() => setAppState('homepage')} />;
         
-      // --- ¡CORRECCIÓN DE RUTA DE TORNEO! ---
       case 'tournament-lobby':
-        // Esto ahora apunta al lobby REAL, no al placeholder
         return <MultiplayerLobby user={user} onBack={() => setAppState('homepage')} />;
       case 'multiplayer-lobby':
         return <MultiplayerLobby user={user} onBack={() => setAppState('homepage')} />;
       
       case 'profile':
-// ... (código existente sin cambios)
-        console.log("[DEBUG App.js] Renderizando: ProfilePage");
         return <ProfilePage user={user} onBack={() => setAppState('homepage')} />;
 
       default:
-        console.warn(`[DEBUG App.js] ADVERTENCIA: appState '${appState}' no fue encontrado en el switch. CAYENDO EN DEFAULT.`);
-// ... (código de error existente sin cambios)
+        console.warn(`[DEBUG App.js] ADVERTENCIA: appState '${appState}' no encontrado.`);
         return (
             <div style={{ padding: '20px', color: 'red', backgroundColor: 'black', height: '100vh', fontFamily: 'monospace' }}>
                 <h1>Error de Navegación</h1>
-                <p>Se intentó navegar a un estado desconocido: <strong>'{appState}'</strong></p>
-                <p>Por favor, revisa la consola (F12) y reinicia el servidor de `npm start`.</p>
-                <button onClick={() => setAppState('homepage')} style={{padding: '10px', fontSize: '16px'}}>Volver a Inicio</button>
+                <p>Se intentó navegar a: <strong>'{appState}'</strong></p>
+                <button onClick={() => setAppState('homepage')} style={{padding: '10px'}}>Volver a Inicio</button>
             </div>
         );
     }

@@ -1,30 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import './LessonView.css';
-// --- CORRECCIÓN CLAVE: IMPORTAR TRIVIAGAME ---
 import TriviaGame from '../Trivia/TriviaGame'; 
-// Importamos los datos de contenido de lecciones
 import { lessonContentData } from '../../data/learningData';
 
-// Simulación de llamada a API (Gemini) - Ahora usa los datos importados
+// ... (fetchLessonContent se mantiene igual) ...
 const fetchLessonContent = async (courseId, lessonId) => {
-  console.log(`Simulando fetch para curso ${courseId}, lección ${lessonId}`);
-  await new Promise(resolve => setTimeout(resolve, 300)); // Simular espera
-
-  const content = lessonContentData[lessonId]; // Buscamos el contenido por ID de lección
-  
-  if (!content) {
-      console.error(`Contenido no encontrado para la lección ${lessonId}`);
-      throw new Error(`Contenido no encontrado para la lección ${lessonId}`);
-  }
-
-  // Simulamos la generación de contenido si no existe en los datos
+  await new Promise(resolve => setTimeout(resolve, 300)); 
+  const content = lessonContentData[lessonId]; 
+  if (!content) throw new Error(`Contenido no encontrado para ${lessonId}`);
   return {
     title: content.title || "Título no encontrado",
     explanation: content.explanation || "Explicación no disponible.",
-    quizQuestions: content.quizQuestions || [] // Devolver array vacío si no hay quiz
+    quizQuestions: content.quizQuestions || [] 
   };
 };
-
 
 const LessonView = ({ courseId, lessonId, onCompleteLesson, onBack }) => {
   const [lessonContent, setLessonContent] = useState(null);
@@ -33,33 +22,38 @@ const LessonView = ({ courseId, lessonId, onCompleteLesson, onBack }) => {
 
   useEffect(() => {
     setIsLoading(true);
-    setShowQuiz(false); // Asegurarse de no mostrar el quiz al cargar nueva lección
+    setShowQuiz(false);
     fetchLessonContent(courseId, lessonId)
       .then(content => {
         setLessonContent(content);
         setIsLoading(false);
       })
       .catch(error => {
-        console.error("Error fetching lesson content:", error);
+        console.error("Error:", error);
         setIsLoading(false);
       });
-  }, [courseId, lessonId]); // Recargar si cambia la lección
+  }, [courseId, lessonId]);
 
   const handleQuizSubmit = (score) => {
-      console.log(`Quiz completado con ${score} aciertos de ${lessonContent.quizQuestions.length}.`);
-      // Pasar si acierta al menos el 60%
-      const passingScore = Math.floor(lessonContent.quizQuestions.length * 0.6);
+      // Calculamos el puntaje necesario (60%)
+      const totalQuestions = lessonContent.quizQuestions.length;
+      const passingScore = Math.ceil(totalQuestions * 0.6);
+      
+      console.log(`Quiz: ${score}/${totalQuestions} (Necesario: ${passingScore})`);
+
       if (score >= passingScore) {
-        console.log("¡Lección aprobada!");
+        alert("¡Felicidades! Has aprobado la lección.");
+        // SOLO AQUÍ llamamos a onCompleteLesson
         onCompleteLesson(courseId, lessonId); 
       } else {
-          alert(`Puntuación insuficiente. Necesitas al menos ${passingScore} aciertos. ¡Repasa la lección e inténtalo de nuevo!`);
-          setShowQuiz(false); // Volver a la lección
+          // AQUÍ NO llamamos a onComplete, solo mostramos alerta y reiniciamos
+          alert(`No has superado el quiz. Tuviste ${score} aciertos, necesitas ${passingScore}. ¡Inténtalo de nuevo!`);
+          setShowQuiz(false); // Regresa a la explicación para leer de nuevo
       }
   };
 
   if (isLoading) return <div className="loading-screen">Cargando lección...</div>;
-  if (!lessonContent) return <div className="error-bar">Error al cargar el contenido de esta lección.</div>;
+  if (!lessonContent) return <div className="error-bar">Error al cargar contenido.</div>;
 
   if (showQuiz) {
       const quizQuestionsFormatted = lessonContent.quizQuestions.map(q => ({
@@ -72,7 +66,7 @@ const LessonView = ({ courseId, lessonId, onCompleteLesson, onBack }) => {
           <div className="lesson-view-container quiz-mode">
               <TriviaGame
                   questions={quizQuestionsFormatted}
-                  categoryName={`Mini-Quiz: ${lessonContent.title}`} 
+                  categoryName={`Quiz: ${lessonContent.title}`} 
                   onGameEnd={handleQuizSubmit} 
               />
           </div>
@@ -87,16 +81,13 @@ const LessonView = ({ courseId, lessonId, onCompleteLesson, onBack }) => {
         <div className="lesson-content">
           <p>{lessonContent.explanation}</p>
         </div>
-        {/* Mostramos el botón solo si hay preguntas definidas */}
-        {lessonContent.quizQuestions && lessonContent.quizQuestions.length > 0 ? (
-            <button onClick={() => setShowQuiz(true)} className="start-quiz-button">
-            Iniciar Mini-Quiz
-            </button>
-        ) : (
-            <button onClick={() => onCompleteLesson(courseId, lessonId)} className="start-quiz-button">
-            Marcar como completada
-            </button>
-        )}
+        
+        {/* Botón para iniciar el quiz */}
+        <button onClick={() => setShowQuiz(true)} className="start-quiz-button">
+            {lessonContent.quizQuestions && lessonContent.quizQuestions.length > 0 
+                ? "Hacer Quiz para Completar" 
+                : "Completar Lección (Sin Quiz)"}
+        </button>
       </div>
     </div>
   );

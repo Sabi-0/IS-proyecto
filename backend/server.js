@@ -370,7 +370,7 @@ async function endGame() {
     gameState.status = 'finished';
     
     const podium = Object.values(gameState.playerScores)
-      map(player => ({
+      .map(player => ({
             displayName: player.name, 
             score: player.score,
             uid: player.uid

@@ -165,9 +165,9 @@ let connectedUsers = [];
 let gameState = {
   status: 'lobby', 
   currentQuestionIndex: 0,
-  totalQuestions: 15, 
+  totalQuestions: 15, // 15 preguntas
   questions: [],   
-  playerScores: {}, 
+  playerScores: {}, // { socketId: { score: 100, name: 'Samuel', uid: '...' } }
   playerAnswers: {} 
 };
 
@@ -176,14 +176,9 @@ const decodeHTMLEntities = (text) => {
   return text.replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
 }
 
-const getRandomCategoryID = () => Math.floor(Math.random() * (32 - 9 + 1)) + 9;
-const difficulties = ['easy', 'medium', 'hard'];
-const getRandomDifficulty = () => difficulties[Math.floor(Math.random() * difficulties.length)];
-
 io.on('connection', (socket) => {
   console.log('Conexión socket:', socket.id);
 
-  // --- 1. UNIRSE AL LOBBY (AHORA SEGURO CON TOKEN) ---
   socket.on('joinLobby', async (data) => {
     try {
       const decodedToken = await admin.auth().verifyIdToken(data.token);
@@ -195,7 +190,10 @@ io.on('connection', (socket) => {
       if (!existingUser) {
           const newUser = { id: socket.id, displayName, uid: user_uid };
           connectedUsers.push(newUser);
-          gameState.playerScores[socket.id] = { score: 0, name: displayName, uid: user_uid }; 
+          // ¡Aseguramos que solo se añade si no existe en playerScores!
+          if (!gameState.playerScores[socket.id]) {
+            gameState.playerScores[socket.id] = { score: 0, name: displayName, uid: user_uid };
+          }
       }
       
       io.emit('updateUserList', connectedUsers);
@@ -207,61 +205,44 @@ io.on('connection', (socket) => {
     }
   });
 
-  // --- 2. INICIAR TORNEO (LÓGICA ARREGLADA) ---
+  // --- 2. INICIAR TORNEO (NUEVA LÓGICA 1x15) ---
   socket.on('startTournament', async () => {
     if (gameState.status !== 'lobby') return; 
     
-    console.log("¡Intentando iniciar torneo 3x5!");
+    console.log("¡Intentando iniciar torneo 1x15!");
     gameState.status = 'loading';
     gameState.currentQuestionIndex = 0;
     gameState.playerAnswers = {};
+    
+    // --- ¡ARREGLO DEL BUG DEL PODIO! ---
+    // Reseteamos playerScores a un objeto vacío
+    gameState.playerScores = {};
+    // Y lo re-poblamos SOLO con los usuarios actualmente conectados
     connectedUsers.forEach(u => {
-      if(gameState.playerScores[u.id]) {
-        gameState.playerScores[u.id].score = 0;
-      }
+        gameState.playerScores[u.id] = { score: 0, name: u.displayName, uid: u.uid };
     });
+    // --- FIN DEL ARREGLO ---
 
     io.emit('gameLoading'); 
 
     try {
-        let allQuestions = [];
-        for (let i = 0; i < 3; i++) {
-            const category = getRandomCategoryID();
-            const difficulty = getRandomDifficulty();
-            const apiUrl = `https://opentdb.com/api.php?amount=5&category=${category}&difficulty=${difficulty}&type=multiple`;
-            const response = await fetch(apiUrl);
-            const data = await response.json();
-            
-            if (data.response_code === 0 && data.results.length > 0) {
-                allQuestions.push(...data.results);
-            } else {
-                const retryResponse = await fetch(`https://opentdb.com/api.php?amount=5&type=multiple`);
-                const retryData = await retryResponse.json();
-                if (retryData.results && retryData.results.length > 0) {
-                    allQuestions.push(...retryData.results);
-                }
-            }
-        }
+        // --- ¡ARREGLO DEL BUG DE LA API! ---
+        // Hacemos UNA sola llamada por 15 preguntas aleatorias.
+        // Esto evita el rate-limit de OpenTDB y es mucho más rápido.
+        const apiUrl = `https://opentdb.com/api.php?amount=15&type=multiple`;
+        const response = await fetch(apiUrl);
+        const data = await response.json();
         
-        // --- ¡ARREGLO DEL BUG! ---
-        if (allQuestions.length === 0) {
-            console.warn("API falló completamente. Usando 15 preguntas de respaldo.");
-            gameState.questions = [...BACKUP_QUESTIONS]; 
+        if (data.response_code === 0 && data.results.length > 0) {
+            console.log("15 preguntas de API obtenidas con éxito.");
+            gameState.questions = data.results;
+            gameState.totalQuestions = data.results.length;
         } else {
-            if (allQuestions.length < 15) {
-                console.warn(`API solo trajo ${allQuestions.length}. Rellenando...`);
-                const needed = 15 - allQuestions.length;
-                allQuestions.push(...BACKUP_QUESTIONS.slice(0, needed));
-            }
-            gameState.questions = allQuestions.slice(0, 15); 
+            throw new Error("API OpenTDB retornó error o 0 preguntas");
         }
-        
-        gameState.totalQuestions = gameState.questions.length;
-        if (gameState.totalQuestions === 0) throw new Error("No hay preguntas de respaldo");
-
     } catch (e) {
-        console.error("Error crítico al buscar preguntas. Usando 15 de respaldo.", e.message);
-        gameState.questions = [...BACKUP_QUESTIONS];
+        console.error("Error obteniendo trivias (Usando Plan B):", e.message);
+        gameState.questions = [...BACKUP_QUESTIONS]; // Usar una copia
         gameState.totalQuestions = BACKUP_QUESTIONS.length;
     }
 
@@ -294,44 +275,40 @@ io.on('connection', (socket) => {
       }
   });
 
-  // --- 4. DESCONEXIÓN (ARREGLO DEL BUG) ---
+  // --- 4. DESCONEXIÓN (Lógica de limpieza) ---
   socket.on('disconnect', () => {
     console.log('Desconectado:', socket.id);
     const wasInLobby = connectedUsers.some(u => u.id === socket.id);
     connectedUsers = connectedUsers.filter(user => user.id !== socket.id);
+    // No borramos el puntaje aquí, el reset se hace en 'startTournament'
     delete gameState.playerAnswers[socket.id]; 
     
     if(wasInLobby) io.emit('updateUserList', connectedUsers);
     
-    // --- ¡CORRECCIÓN CLAVE! ---
-    // SOLO reseteamos el juego si todos se van Y el juego está en 'lobby'.
-    // Si están jugando o cargando, el estado del juego se mantiene.
+    // Si el juego está en 'lobby' y se van todos, resetea
     if (connectedUsers.length === 0 && gameState.status === 'lobby') {
         console.log("Todos se fueron del lobby. Reseteando estado.");
-        gameState.status = 'lobby';
         gameState.questions = [];
-    } else {
-        // Si el juego está en curso, verificamos si el que se fue era el último que faltaba por responder
+    } else if (gameState.status === 'playing') {
+        // Si estaban jugando y el que se fue era el último que faltaba por responder
         const answeredCount = Object.keys(gameState.playerAnswers).length;
-        if (gameState.status === 'playing' && answeredCount >= connectedUsers.length) {
-            console.log("El último jugador se desconectó. Terminando ronda.");
+        if (answeredCount >= connectedUsers.length) {
+            console.log("El último jugador que faltaba se desconectó. Terminando ronda.");
             endRound();
         }
     }
   });
 });
 
-// --- Funciones Auxiliares del Juego ---
-
+// --- Funciones Auxiliares del Juego (Sin cambios) ---
 function sendNextQuestion() {
     if (!gameState.questions[gameState.currentQuestionIndex]) {
-        endGame(); // No hay más preguntas
+        endGame(); 
         return;
     }
-    gameState.playerAnswers = {}; // Reseteamos respuestas
+    gameState.playerAnswers = {}; 
     const q = gameState.questions[gameState.currentQuestionIndex];
     
-    // Fallback por si la API falla y 'q' es undefined
     if (!q) {
         console.error(`Error: Intento de enviar pregunta ${gameState.currentQuestionIndex} pero no existe.`);
         return endGame();
@@ -351,7 +328,7 @@ function sendNextQuestion() {
 
 function endRound() {
     const currentQ = gameState.questions[gameState.currentQuestionIndex];
-    if (!currentQ) return endGame(); // Seguridad
+    if (!currentQ) return endGame(); 
     
     io.emit('roundResults', { 
         correctAnswer: currentQ.correct_answer 
@@ -369,13 +346,15 @@ function endRound() {
 async function endGame() {
     gameState.status = 'finished';
     
+    // --- ¡ARREGLO DEL PODIO! ---
+    // Mapeamos los resultados para que coincidan con lo que el frontend espera (displayName)
     const podium = Object.values(gameState.playerScores)
-      .map(player => ({
-            displayName: player.name, 
+        .map(player => ({
+            displayName: player.name, // <-- Aquí está la corrección (name -> displayName)
             score: player.score,
             uid: player.uid
         }))
-        .sort((a, b) => b.score - a.score);
+        .sort((a, b) => b.score - a.score); // Y luego ordenamos
 
     console.log("Torneo terminado. Guardando en BD y enviando podio:", podium);
     
@@ -391,7 +370,7 @@ async function endGame() {
                 const incorrectAnswers = gameState.totalQuestions - correctAnswers;
                 
                 const sessionQuery = `INSERT INTO game_sessions (user_uid, game_mode, category_name, difficulty, score, questions_total, started_at, ended_at) VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())`;
-                savePromises.push(client.query(sessionQuery, [player.uid, 'tournament', 'Variado', 'Variada', score, gameState.totalQuestions]));
+                savePromises.push(client.query(sessionQuery, [player.uid, 'tournament', 'Variado (Online)', 'Variada', score, gameState.totalQuestions]));
                 
                 const statsQuery = `UPDATE user_stats SET total_score = total_score + $1, games_played = games_played + 1, correct_answers = correct_answers + $2, incorrect_answers = incorrect_answers + $3 WHERE user_uid = $4`;
                 savePromises.push(client.query(statsQuery, [score, correctAnswers, incorrectAnswers, player.uid]));
@@ -409,10 +388,12 @@ async function endGame() {
 
     io.emit('gameEnded', { podium });
     
+    // Reseteamos el estado para el próximo lobby
     setTimeout(() => {
         gameState.status = 'lobby';
         gameState.questions = [];
         gameState.currentQuestionIndex = 0;
+        // NO reseteamos connectedUsers ni playerScores aquí, se hace en el disconnect/join
     }, 15000); 
 }
 
